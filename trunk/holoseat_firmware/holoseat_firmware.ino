@@ -45,8 +45,7 @@ unsigned int SamplesPerSec;
 
 void setup()
  {
-   Serial.begin(9600);
-   //Interrupt 0 is digital pin 2, so that is where the IR detector is connected
+   //Interrupt 1 is digital pin 2, so that is where the reed switch is connected
    //Triggers on FALLING (change from HIGH to LOW)
    InterruptNumber = 1;
    attachInterrupt(InterruptNumber, StepsCalc, FALLING);
