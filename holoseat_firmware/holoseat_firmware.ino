@@ -33,14 +33,14 @@ unsigned int StepsPerMin;
 unsigned int TriggerStepsPerMin;
 unsigned long TimeOld;
 unsigned int InterruptNumber;
-unsigned int SamplesPerSec;
+unsigned int SampleRate;
 
  void StepsCalc()
  {
    //Each rotation, this interrupt function is run twice, so take that into consideration for
    //calculating RPM
    //Update count
-	StepsCount++;
+   StepsCount++;
  }
 
 void setup()
@@ -53,30 +53,31 @@ void setup()
    StepsCount = 0;
    StepsPerMin = 0;
    TimeOld = 0;
-   TriggerStepsPerMin = 75;
-   SamplesPerSec = 3;
+   TriggerStepsPerMin = 90;
+   SampleRate = 1;
    
    Keyboard.begin();
  }
 
  void loop()
  {
-   //Update step rate SamplesPerSec times per second
-   delay(1000/SamplesPerSec);
-   //Don't process interrupts during calculations
+   delay(1000 / SampleRate + 5);  // go slightly slower than max rate of sampling
+   
+   // Don't process interrupts during calculations
    detachInterrupt(InterruptNumber);
-   //Note that this would be StepsPerMin = 60*1000/(millis() - TimeOld)*StepsCount if the interrupt
-   //happened once per revolution instead of twice.  Divide result by 2*n where n = number
-   //samples per second
-   StepsPerMin = 60*1000/(millis() - TimeOld)*StepsCount/(2*SamplesPerSec);
+   // Note that this would be StepsPerMin = 60*1000/(millis() - TimeOld)*StepsCount if the interrupt
+   // happened once per revolution instead of twice.  Divide result by 2
+   
+   StepsPerMin = 60*1000/(millis() - TimeOld)*StepsCount/2;
    TimeOld = millis();
    StepsCount = 0;
 
-   //Write it out to serial port
-   Serial.println(StepsPerMin,DEC);
-   
-   // If step rate is fast enough, send a "w"
+   // Calculate actual trigger rate based on potentiometer value
+   // Then update sample rate ased on trigger rate
    unsigned int calculatedTriggerStepsPerMin = TriggerStepsPerMin;
+   SampleRate = 1.5 * calculatedTriggerStepsPerMin / 60;
+   
+   // If step rate is fast enough, send a "w" 
    if (StepsPerMin > calculatedTriggerStepsPerMin)
      Keyboard.press('w');
    else
