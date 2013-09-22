@@ -29,18 +29,18 @@
  
 //#define debug
  
-volatile float StepsCount;
 volatile unsigned long LastDebounceTime;
+volatile unsigned long LastStepTime;
+volatile unsigned long StepPeriodTriggered;
 
 long DebounceDelay;
 float StepsPerMin;
 float TriggerStepsPerMin;
-unsigned long TimeOld;
 unsigned int InterruptNumber;
-float SampleRate;
-unsigned long DelayTime; 
 boolean WalkingState;
 boolean LastWalkingState;
+int DebugTracker;
+unsigned long StepPeriod;
 
 void StepsCalc()
  {
@@ -50,7 +50,8 @@ void StepsCalc()
    
    if (millis() - LastDebounceTime > DebounceDelay)
      {
-     StepsCount++;
+     StepPeriodTriggered = millis() - LastStepTime;
+     LastStepTime = millis();
      }
      
    LastDebounceTime = millis();  
@@ -66,6 +67,7 @@ void setup()
      ; // wait for serial port to connect. Needed for Leonardo only
      }
      Serial.println("Debugger Connected");
+     DebugTracker = 0;
 #endif
    
    //Interrupt 1 is digital pin 2, so that is where the reed switch is connected
@@ -73,14 +75,13 @@ void setup()
    InterruptNumber = 1;
    attachInterrupt(InterruptNumber, StepsCalc, FALLING);
 
-   StepsCount = 0;
    StepsPerMin = 0;
-   TimeOld = 0;
+   LastStepTime = millis()-5000;          // initialize step times to 5 seconds in the past so we do not trigger walking on setup
+   StepPeriodTriggered = millis()-5000;
+   StepPeriod = 0;
    TriggerStepsPerMin = 80;
-   SampleRate = 1;
-   DelayTime = 1000 / SampleRate + 5;
 
-   DebounceDelay = 100;    // the debounce time; increase if the output flickers
+   DebounceDelay = 100;    // the debounce time; increase if walking jitters
    LastDebounceTime = 0;
    WalkingState = false;
    LastWalkingState = false;
@@ -90,47 +91,42 @@ void setup()
 
  void loop()
  {
-   delay(DelayTime);  // go slightly slower than max rate of sampling
+   delay(DebounceDelay+50);  // delay should be longer than the debounce time
    
    // Don't process interrupts during calculations
    detachInterrupt(InterruptNumber);
    
-   unsigned int timeStep = millis() - TimeOld;
-   StepsPerMin = StepsCount * 60.0 * 1000.0 / timeStep;
-   TimeOld = millis();
+   StepPeriod = millis() - LastStepTime;
+   StepsPerMin = (1.0/max(StepPeriod, StepPeriodTriggered)) * 60.0 * 1000.0;
 
    // Calculate actual trigger rate based on potentiometer value
    // Then update sample rate ased on trigger rate
    float calculatedTriggerStepsPerMin = TriggerStepsPerMin;
-   SampleRate = calculatedTriggerStepsPerMin / 60;
-   DelayTime = floor(1000 / SampleRate) + 5;
    
    // If step rate is fast enough, send a "w";  note, only call the keyboard library
    // our walking state has changed. 
    WalkingState = StepsPerMin > calculatedTriggerStepsPerMin;
    
 #ifdef debug
-   if (LastWalkingState || (StepsPerMin > 0.))
+   DebugTracker++;
+   if ((LastWalkingState || (StepsPerMin > (calculatedTriggerStepsPerMin/2))))
      {
-     Serial.print("Delay=");
-     Serial.print(DelayTime);
-     Serial.print(" | LWS=");
+     Serial.print("LWS=");
      Serial.print(LastWalkingState);
      Serial.print(" | WS=");
      Serial.print(WalkingState);
-     Serial.print(" | Steps=");
-     Serial.print(StepsCount,0);
-     Serial.print(" | TimeStep=");
-     Serial.print(timeStep);
+     Serial.print(" | Period=");
+     Serial.print(StepPeriod);
+     Serial.print(" | PeriodT=");
+     Serial.print(StepPeriodTriggered);
      Serial.print(" | SPM=");
      Serial.print(StepsPerMin,1);
      Serial.print(" Trigger=");
      Serial.println(calculatedTriggerStepsPerMin,1);
+     DebugTracker = 0;
      }
 #endif
-   
-   StepsCount = 0;
-   
+      
    if (WalkingState != LastWalkingState)
      {
      LastWalkingState = WalkingState;
