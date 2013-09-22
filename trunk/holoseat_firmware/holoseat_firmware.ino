@@ -28,19 +28,29 @@
  */
  
 volatile int StepsCount;
+volatile unsigned long LastDebounceTime;
 
+long DebounceDelay;
 unsigned int StepsPerMin;
 unsigned int TriggerStepsPerMin;
 unsigned long TimeOld;
 unsigned int InterruptNumber;
 unsigned int SampleRate;
+boolean WalkingState;
+boolean LastWalkingState;
 
- void StepsCalc()
+void StepsCalc()
  {
    //Each rotation, this interrupt function is run twice, so take that into consideration for
    //calculating RPM
    //Update count
-   StepsCount++;
+   
+   if (millis() - LastDebounceTime > DebounceDelay)
+     {
+     StepsCount++;
+     }
+     
+   LastDebounceTime = millis();  
  }
 
 void setup()
@@ -53,8 +63,13 @@ void setup()
    StepsCount = 0;
    StepsPerMin = 0;
    TimeOld = 0;
-   TriggerStepsPerMin = 90;
+   TriggerStepsPerMin = 80;
    SampleRate = 1;
+
+   DebounceDelay = 100;    // the debounce time; increase if the output flickers
+   LastDebounceTime = 0;
+   WalkingState = false;
+   LastWalkingState = false;
    
    Keyboard.begin();
  }
@@ -65,23 +80,27 @@ void setup()
    
    // Don't process interrupts during calculations
    detachInterrupt(InterruptNumber);
-   // Note that this would be StepsPerMin = 60*1000/(millis() - TimeOld)*StepsCount if the interrupt
-   // happened once per revolution instead of twice.  Divide result by 2
    
-   StepsPerMin = 60*1000/(millis() - TimeOld)*StepsCount/2;
+   StepsPerMin = 60*1000/(millis() - TimeOld)*StepsCount;
    TimeOld = millis();
    StepsCount = 0;
 
    // Calculate actual trigger rate based on potentiometer value
    // Then update sample rate ased on trigger rate
    unsigned int calculatedTriggerStepsPerMin = TriggerStepsPerMin;
-   SampleRate = 1.5 * calculatedTriggerStepsPerMin / 60;
+   SampleRate = calculatedTriggerStepsPerMin / 60;
    
-   // If step rate is fast enough, send a "w" 
-   if (StepsPerMin > calculatedTriggerStepsPerMin)
-     Keyboard.press('w');
-   else
-     Keyboard.releaseAll();
+   // If step rate is fast enough, send a "w";  note, only call the keyboard library
+   // our walking state has changed. 
+   WalkingState = StepsPerMin > calculatedTriggerStepsPerMin;
+   if (WalkingState != LastWalkingState)
+     {
+     LastWalkingState = WalkingState;
+     if (WalkingState)
+       Keyboard.press('w');
+     else
+       Keyboard.releaseAll();
+     }
 
    //Restart the interrupt processing
    attachInterrupt(InterruptNumber, StepsCalc, FALLING);
