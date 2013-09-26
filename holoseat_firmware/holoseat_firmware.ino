@@ -27,7 +27,7 @@
  *  - http://www.arduino.cc/en/Tutorial/Switch
  */
  
-//#define debug
+#define debug
  
 volatile unsigned long LastDebounceTime;
 volatile unsigned long LastStepTime;
@@ -39,8 +39,8 @@ float TriggerStepsPerMin;
 unsigned int InterruptNumber;
 boolean WalkingState;
 boolean LastWalkingState;
-int DebugTracker;
 unsigned long StepPeriod;
+char WalkCommandChar;
 
 void StepsCalc()
  {
@@ -59,6 +59,8 @@ void StepsCalc()
 
 void setup()
  {
+   WalkCommandChar = 'w';
+   TriggerStepsPerMin = 75;
 #ifdef debug
    //Initialize serial and wait for port to open:
    Serial.begin(9600); 
@@ -67,7 +69,14 @@ void setup()
      ; // wait for serial port to connect. Needed for Leonardo only
      }
      Serial.println("Debugger Connected");
-     DebugTracker = 0;
+     Serial.println("==================");
+     Serial.println("Setup");
+     Serial.println("------------------------");
+     Serial.print("Walk Char= ");
+     Serial.println(WalkCommandChar);
+     Serial.print("Default TriggerStepsPerMin= ");
+     Serial.println(TriggerStepsPerMin);
+     Serial.println("------------------------");
 #endif
    
    //Interrupt 1 is digital pin 2, so that is where the reed switch is connected
@@ -79,9 +88,8 @@ void setup()
    LastStepTime = millis()-5000;          // initialize step times to 5 seconds in the past so we do not trigger walking on setup
    StepPeriodTriggered = millis()-5000;
    StepPeriod = 0;
-   TriggerStepsPerMin = 80;
 
-   DebounceDelay = 100;    // the debounce time; increase if walking jitters
+   DebounceDelay = 50;    // the debounce time; increase if walking jitters
    LastDebounceTime = 0;
    WalkingState = false;
    LastWalkingState = false;
@@ -108,7 +116,6 @@ void setup()
    WalkingState = StepsPerMin > calculatedTriggerStepsPerMin;
    
 #ifdef debug
-   DebugTracker++;
    if ((LastWalkingState || (StepsPerMin > (calculatedTriggerStepsPerMin/2))))
      {
      Serial.print("LWS=");
@@ -123,7 +130,6 @@ void setup()
      Serial.print(StepsPerMin,1);
      Serial.print(" Trigger=");
      Serial.println(calculatedTriggerStepsPerMin,1);
-     DebugTracker = 0;
      }
 #endif
       
@@ -131,7 +137,7 @@ void setup()
      {
      LastWalkingState = WalkingState;
      if (WalkingState)
-       Keyboard.press('w');
+       Keyboard.press(WalkCommandChar);
      else
        Keyboard.releaseAll();
      }
