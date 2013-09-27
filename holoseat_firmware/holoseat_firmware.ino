@@ -27,7 +27,7 @@
  *  - http://www.arduino.cc/en/Tutorial/Switch
  */
  
-#define debug
+//#define debug
  
 volatile unsigned long LastDebounceTime;
 volatile unsigned long LastStepTime;
@@ -40,14 +40,11 @@ unsigned int InterruptNumber;
 boolean WalkingState;
 boolean LastWalkingState;
 unsigned long StepPeriod;
+unsigned long  LastStepPeriod;
 char WalkCommandChar;
 
 void StepsCalc()
  {
-   //Each rotation, this interrupt function is run twice, so take that into consideration for
-   //calculating RPM
-   //Update count
-   
    if (millis() - LastDebounceTime > DebounceDelay)
      {
      StepPeriodTriggered = millis() - LastStepTime;
@@ -88,8 +85,9 @@ void setup()
    LastStepTime = millis()-5000;          // initialize step times to 5 seconds in the past so we do not trigger walking on setup
    StepPeriodTriggered = millis()-5000;
    StepPeriod = 0;
+   LastStepPeriod = 0;
 
-   DebounceDelay = 50;    // the debounce time; increase if walking jitters
+   DebounceDelay = 100;    // the debounce time; increase if walking jitters
    LastDebounceTime = 0;
    WalkingState = false;
    LastWalkingState = false;
@@ -115,23 +113,17 @@ void setup()
    // our walking state has changed. 
    WalkingState = StepsPerMin > calculatedTriggerStepsPerMin;
    
-#ifdef debug
    if ((LastWalkingState || (StepsPerMin > (calculatedTriggerStepsPerMin/2))))
-     {
-     Serial.print("LWS=");
-     Serial.print(LastWalkingState);
-     Serial.print(" | WS=");
-     Serial.print(WalkingState);
-     Serial.print(" | Period=");
-     Serial.print(StepPeriod);
-     Serial.print(" | PeriodT=");
-     Serial.print(StepPeriodTriggered);
-     Serial.print(" | SPM=");
-     Serial.print(StepsPerMin,1);
-     Serial.print(" Trigger=");
-     Serial.println(calculatedTriggerStepsPerMin,1);
-     }
-#endif
+      LogDebugInfo(calculatedTriggerStepsPerMin);
+      
+    if (!WalkingState)
+     {  
+     if (LastStepPeriod > StepPeriod)
+       {
+       LogDebugInfo(0);
+       WalkNSteps(20);
+       }
+     }   
       
    if (WalkingState != LastWalkingState)
      {
@@ -142,6 +134,37 @@ void setup()
        Keyboard.releaseAll();
      }
 
+   LastStepPeriod = StepPeriod;
+
    //Restart the interrupt processing
    attachInterrupt(InterruptNumber, StepsCalc, FALLING);
   }
+  
+void WalkNSteps(int n)
+{
+  Keyboard.press(WalkCommandChar);
+  delay(10*n);
+  Keyboard.releaseAll(); 
+}
+ 
+ 
+ void LogDebugInfo(float spm)
+ {
+ #ifdef debug 
+   Serial.print("LWS=");
+   Serial.print(LastWalkingState);
+   Serial.print(" | WS=");
+   Serial.print(WalkingState);
+   Serial.print(" | LastPeriod=");
+   Serial.print(LastStepPeriod);
+   Serial.print(" | Period=");
+   Serial.print(StepPeriod);
+   Serial.print(" | PeriodT=");
+   Serial.print(StepPeriodTriggered);
+   Serial.print(" | SPM=");
+   Serial.print(StepsPerMin,1);
+   Serial.print(" Trigger=");
+   Serial.println(spm,1);
+#endif
+ }
+
