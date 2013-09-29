@@ -32,16 +32,22 @@
 volatile unsigned long LastDebounceTime;
 volatile unsigned long LastStepTime;
 volatile unsigned long StepPeriodTriggered;
+volatile unsigned int StepCount;
 
 long DebounceDelay;
 float StepsPerMin;
 float TriggerStepsPerMin;
+float TriggerStepsPerMax;
+unsigned long MinTriggerPeriod;
 unsigned int InterruptNumber;
 boolean WalkingState;
 boolean LastWalkingState;
 unsigned long StepPeriod;
 unsigned long  LastStepPeriod;
+unsigned int LastStepCount;
+unsigned long LastStepPeriodTriggered;
 char WalkCommandChar;
+unsigned int ExtraSteps;
 
 void StepsCalc()
  {
@@ -49,6 +55,7 @@ void StepsCalc()
      {
      StepPeriodTriggered = millis() - LastStepTime;
      LastStepTime = millis();
+     StepCount++;
      }
      
    LastDebounceTime = millis();  
@@ -57,7 +64,11 @@ void StepsCalc()
 void setup()
  {
    WalkCommandChar = 'w';
-   TriggerStepsPerMin = 75;
+   TriggerStepsPerMin = 75;  
+   TriggerStepsPerMax = 175;
+   MinTriggerPeriod = floor((1/TriggerStepsPerMax) * 60 * 1000);
+   DebounceDelay = 100;    // the debounce time; increase if walking jitters
+   LastDebounceTime = 0;
 #ifdef debug
    //Initialize serial and wait for port to open:
    Serial.begin(9600); 
@@ -73,6 +84,10 @@ void setup()
      Serial.println(WalkCommandChar);
      Serial.print("Default TriggerStepsPerMin= ");
      Serial.println(TriggerStepsPerMin);
+     Serial.print("MinTriggerPeriod= ");
+     Serial.println(MinTriggerPeriod);
+     Serial.print("DebounceDelay= ");
+     Serial.println(DebounceDelay);
      Serial.println("------------------------");
 #endif
    
@@ -83,14 +98,15 @@ void setup()
 
    StepsPerMin = 0;
    LastStepTime = millis()-5000;          // initialize step times to 5 seconds in the past so we do not trigger walking on setup
-   StepPeriodTriggered = millis()-5000;
+   StepPeriodTriggered = ((1 / TriggerStepsPerMin) * 60 * 1000) + 100;  // initialize to just slower than walking speed
+   LastStepPeriodTriggered = StepPeriodTriggered;
    StepPeriod = 0;
    LastStepPeriod = 0;
-
-   DebounceDelay = 100;    // the debounce time; increase if walking jitters
-   LastDebounceTime = 0;
+   StepCount = 0;
+   LastStepCount = 0;
    WalkingState = false;
    LastWalkingState = false;
+   ExtraSteps = 0;
    
    Keyboard.begin();
  }
@@ -102,11 +118,27 @@ void setup()
    // Don't process interrupts during calculations
    detachInterrupt(InterruptNumber);
    
+   // set of conditions under which we have detected false "extra" steps
+   // * both this step count and the last one are > 0
+   // * this step count is > 1
+   // * walk rate exceeds 2*TriggerRate (aka trigger period < min trigger
+   boolean extraStep = ((StepCount > 0) && (LastStepCount > 0)) || (StepCount > 1) || (StepPeriodTriggered < MinTriggerPeriod);
+   
+   if (extraStep && (ExtraSteps < 2))
+     {
+     StepPeriodTriggered = LastStepPeriodTriggered;
+     LastStepCount = 0;
+     ExtraSteps++;
+     } 
+   else
+     {
+     ExtraSteps = 0;
+     }
+ 
    StepPeriod = millis() - LastStepTime;
    StepsPerMin = (1.0/max(StepPeriod, StepPeriodTriggered)) * 60.0 * 1000.0;
 
    // Calculate actual trigger rate based on potentiometer value
-   // Then update sample rate ased on trigger rate
    float calculatedTriggerStepsPerMin = TriggerStepsPerMin;
    
    // If step rate is fast enough, send a "w";  note, only call the keyboard library
@@ -114,27 +146,34 @@ void setup()
    WalkingState = StepsPerMin > calculatedTriggerStepsPerMin;
    
    if ((LastWalkingState || (StepsPerMin > (calculatedTriggerStepsPerMin/2))))
-      LogDebugInfo(calculatedTriggerStepsPerMin);
+      LogDebugInfo(calculatedTriggerStepsPerMin, extraStep);
       
     if (!WalkingState)
-     {  
-     if (LastStepPeriod > StepPeriod)
-       {
-       LogDebugInfo(0);
-       WalkNSteps(20);
-       }
-     }   
+      {  
+      if (LastStepPeriod > StepPeriod)
+        {
+        LogDebugInfo(0, extraStep);
+        WalkNSteps(20);
+        }
+      }  
       
    if (WalkingState != LastWalkingState)
      {
      LastWalkingState = WalkingState;
      if (WalkingState)
+       {
        Keyboard.press(WalkCommandChar);
+       }
      else
+       {
        Keyboard.releaseAll();
+       }
      }
-
+     
+   LastStepCount = StepCount;
+   StepCount = 0; 
    LastStepPeriod = StepPeriod;
+   LastStepPeriodTriggered = StepPeriodTriggered;
 
    //Restart the interrupt processing
    attachInterrupt(InterruptNumber, StepsCalc, FALLING);
@@ -148,23 +187,31 @@ void WalkNSteps(int n)
 }
  
  
- void LogDebugInfo(float spm)
+ void LogDebugInfo(float spm, boolean extraStep)
  {
  #ifdef debug 
    Serial.print("LWS=");
    Serial.print(LastWalkingState);
    Serial.print(" | WS=");
    Serial.print(WalkingState);
+   Serial.print(" | ExtraStep=");
+   Serial.print(extraStep);
    Serial.print(" | LastPeriod=");
    Serial.print(LastStepPeriod);
    Serial.print(" | Period=");
    Serial.print(StepPeriod);
+   Serial.print(" | LastPeriodT=");
+   Serial.print(LastStepPeriodTriggered);
    Serial.print(" | PeriodT=");
    Serial.print(StepPeriodTriggered);
+   Serial.print(" | Steps=");
+   Serial.print(StepCount);
+   Serial.print(" | LastSteps=");
+   Serial.print(LastStepCount);
    Serial.print(" | SPM=");
    Serial.print(StepsPerMin,1);
-   Serial.print(" Trigger=");
-   Serial.println(spm,1);
+   Serial.print(" | Trigger=");
+   Serial.println(spm,1);  
 #endif
  }
 
