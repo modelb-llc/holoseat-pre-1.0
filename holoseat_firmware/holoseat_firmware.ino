@@ -27,7 +27,9 @@
  *  - http://www.arduino.cc/en/Tutorial/Switch
  */
  
-//#define debug
+ #include "holoseat_constants.h"
+ 
+ //#define debug
  
 volatile unsigned long LastDebounceTime;
 volatile unsigned long LastStepTime;
@@ -35,9 +37,7 @@ volatile unsigned long StepPeriodTriggered;
 volatile unsigned int StepCount;
 
 const long DebounceDelay = 100;    // the debounce time; increase if walking jitters
-const float TriggerStepsPerMin = 75;
 const float TriggerStepsPerMax = 175;
-const char WalkCommandChar = 'w';
 const unsigned int InterruptNumber = 1;
 const int SwitchPin = 3;
 const int LedPin =  13;
