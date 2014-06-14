@@ -172,10 +172,14 @@ void setup()
      //Restart the interrupt processing
      attachInterrupt(InterruptNumber, StepsCalc, FALLING);
      }
-   else
+   else  // switch is turned "off"
      {
      digitalWrite(LedPin, LOW);
-     InitializeWalkingVariables();
+     if (WalkingState)  // if we were walking, need to stop and need to clear state
+       {
+       Keyboard.releaseAll();
+       InitializeWalkingVariables();
+       }
      }
   }
   
