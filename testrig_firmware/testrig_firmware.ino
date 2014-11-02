@@ -1,13 +1,12 @@
 /*
+Holoseat Test Rig Firmware
 
-SimPlot Demo Arduino Sketch.
-Generates and sends out 4 channels of data to be plotted using SimPlot.
+based on:
+* SimPlot Demo Arduino Sketch - Generates and sends out 4 channels of data to be plotted using SimPlot.
+* Adafruit Arduino - Lesson 16. Stepper
 
 */
-void setup() 
-{ 
-  Serial.begin(57600);   
-} 
+#include <Stepper.h>
 
 int buffer[20];
 float deltaAngle = 3.14/51; //Arbitrary angle increment size
@@ -20,8 +19,33 @@ unsigned long time;
 float sample;
 boolean experimentRunning = false;
 
+int in1Pin = 12;
+int in2Pin = 11;
+int in3Pin = 10;
+int in4Pin = 9;
+
+Stepper motor(512, in1Pin, in2Pin, in3Pin, in4Pin);
+
+void setup() 
+{ 
+  pinMode(in1Pin, OUTPUT);
+  pinMode(in2Pin, OUTPUT);
+  pinMode(in3Pin, OUTPUT);
+  pinMode(in4Pin, OUTPUT);
+ 
+  Serial.begin(57600);  
+  motor.setSpeed(20); 
+} 
+
 void loop() 
 { 
+  if (Serial.available())
+  {
+    int steps = Serial.parseInt();
+    motor.step(steps);
+  }  
+ 
+/*  
   int data1;
   int data2;
   int data3;
@@ -70,6 +94,7 @@ void loop()
   }
   
   delay(100); //Need some delay else the program gets swamped with data  
+*/
 } 
 
 void plot(int data1, int data2, int data3, int data4, boolean simplot)
