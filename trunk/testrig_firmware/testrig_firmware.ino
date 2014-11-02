@@ -4,9 +4,10 @@ Holoseat Test Rig Firmware
 based on:
 * SimPlot Demo Arduino Sketch - Generates and sends out 4 channels of data to be plotted using SimPlot.
 * Adafruit Arduino - Lesson 16. Stepper
+* AccelStepper - ConstantSpeed
 
 */
-#include <Stepper.h>
+#include <AccelStepper.h> // requires AccelStepper v1.45
 
 int buffer[20];
 float deltaAngle = 3.14/51; //Arbitrary angle increment size
@@ -24,7 +25,10 @@ int in2Pin = 11;
 int in3Pin = 10;
 int in4Pin = 9;
 
-Stepper motor(512, in1Pin, in2Pin, in3Pin, in4Pin);
+float RPMtoSPS = 8.533;  // conversion factor from RPM to Steps/Sec
+
+//Stepper motor(512, in1Pin, in2Pin, in3Pin, in4Pin);
+AccelStepper stepper(AccelStepper::FULL4WIRE, in1Pin, in2Pin, in3Pin, in4Pin); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
 
 void setup() 
 { 
@@ -34,7 +38,11 @@ void setup()
   pinMode(in4Pin, OUTPUT);
  
   Serial.begin(57600);  
-  motor.setSpeed(20); 
+  //motor.setSpeed(20);
+  stepper.setMaxSpeed(1024); 
+  stepper.setAcceleration(100.0);
+  //stepper.moveTo(0);
+  stepper.setSpeed(0);
 } 
 
 void loop() 
@@ -42,9 +50,12 @@ void loop()
   if (Serial.available())
   {
     int steps = Serial.parseInt();
-    motor.step(steps);
+    //stepper.move(steps);
+    stepper.setSpeed(steps * RPMtoSPS);
   }  
- 
+  
+  stepper.runSpeed();
+  
 /*  
   int data1;
   int data2;
