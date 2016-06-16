@@ -13,6 +13,7 @@
     "node": "6.1.0"
   },
   "dependencies": {
+    "csv": "1.1.0",
     "johnny-five": "0.9.50",
     "raspi-io": "6.0.1"
   }
