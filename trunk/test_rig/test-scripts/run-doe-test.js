@@ -58,6 +58,7 @@ board.on('ready', function() {
 		logData = false;
 		stringify(testData, function(err, output){
 			fs.writeFileSync(outFileName, output);
+			console.log('RSME = ' + computeRSME());
 			process.exit();
 		});
 	}, testDefinition.Duration * 1000);
@@ -75,3 +76,17 @@ board.on('ready', function() {
 		}
 	});
 });
+
+function computeRSME() {
+	// Note: going to skip the first value, it is noise as the time
+	// delta is wrong
+	var sumOfSquares = 0.0;
+	var cadence = testDefinition.Cadence;
+	var numValues = testData.length - 1;  
+	
+	for (var i = 1; i < numValues; i++) {
+		sumOfSquares += Math.pow(cadence - testData[i][1], 2);
+	}
+	
+	return Math.sqrt(sumOfSquares/numValues);
+}
