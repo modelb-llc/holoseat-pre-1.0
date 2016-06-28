@@ -73,6 +73,9 @@ void StepsCalc()
 
 void SendStateMessage()
  {
+    if(!Serial) // if the serial port connection is not available, skip state message
+      return;
+  
     Serial.print(FirmwareVersionString);
     Serial.print(",");
     Serial.print(WalkCharacter);
@@ -103,10 +106,6 @@ void setup()
  {
    pinMode(LedPin, OUTPUT);
    Serial.begin(SerialBaudRate); 
-   while (!Serial) // FIXME - we need to make sure we can get to serial without blocking boot up
-     {
-     ; // wait for serial port to connect. Needed for Leonardo only
-     }
    
    MinTriggerPeriod = floor((1/TriggerStepsPerMax) * 60 * 1000);
    LastDebounceTime = 0;
@@ -121,21 +120,36 @@ void setup()
    LastLogTime = millis();
    
    Keyboard.begin();
-   Serial.println("R"); // send ready signal
+
+/* hold this code for use in debugger mode - to be developed later
+   while (!Serial)
+     {
+     ;
+     }
+   Serial.println("R"); // send ready signal, if there is a serial connection
    SendStateMessage();
- }
+*/
+}
 
  void loop()
  {
    delay(DebounceDelay+50);  // delay should be longer than the debounce time
 
-   if (Serial.available())
+   if (Serial && Serial.available())
      {
      // FIXME - replace with C-string functions later for stability 
      String command = Serial.readStringUntil('\n'); 
      int nextStart = 0;
-     if (command.charAt(0) == 'Q')
+     
+     if (command.charAt(0) == '?')
+       {
+       Serial.println("R"); // send ready signal
        SendStateMessage();
+       }
+     else if (command.charAt(0) == 'Q')
+       {
+       SendStateMessage();
+       }
      else if (command.charAt(0) == 'S')
        {
        // find new walk character
