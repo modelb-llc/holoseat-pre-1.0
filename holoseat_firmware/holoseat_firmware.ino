@@ -23,24 +23,31 @@
  * including:
  *  - http://www.instructables.com/id/Arduino-Bike-Speedometer/
  *  - http://arduino.cc/en/Tutorial/Blink?from=Tutorial.BlinkingLED
- *  - http://www.arduino.cc/en/Tutorial/Potentiometer
- *  - http://www.arduino.cc/en/Tutorial/Switch
  */
  
  #include "holoseat_constants.h"
+ #include "Keyboard.h"
+ #include "math.h"
  
- //#define debug
+char FirmwareVersionString[] = "0.0.0";
  
 volatile unsigned long LastDebounceTime;
 volatile unsigned long LastStepTime;
 volatile unsigned long StepPeriodTriggered;
 volatile unsigned int StepCount;
+volatile unsigned long LastLogTime;
 
 const long DebounceDelay = 100;    // the debounce time; increase if walking jitters
 const float TriggerStepsPerMax = 175;
 const unsigned int InterruptNumber = 1;
-const int SwitchPin = 3;
 const int LedPin =  13;
+
+// Parameter values
+char WalkCharacter = DefaultWalkCharacter;
+unsigned int HoloseatEnabled = DefaultHoloseatEnabled;
+unsigned int TriggerCadence = DefaultTriggerCadence;
+unsigned int LoggingEnabled = DefaultLoggingEnabled;
+unsigned int LoggingInterval = DefaultLoggingInterval;
 
 float StepsPerMin;
 unsigned long MinTriggerPeriod;
@@ -64,49 +71,106 @@ void StepsCalc()
    LastDebounceTime = millis();  
  }
 
+void SendStateMessage()
+ {
+    Serial.print(FirmwareVersionString);
+    Serial.print(",");
+    Serial.print(WalkCharacter);
+    Serial.print("(");
+    Serial.print(DefaultWalkCharacter);
+    Serial.print("),");
+    Serial.print(HoloseatEnabled);
+    Serial.print("(");
+    Serial.print(DefaultHoloseatEnabled);
+    Serial.print("),");
+    Serial.print(round(StepsPerMin));
+    Serial.print("/");
+    Serial.print(TriggerCadence);
+    Serial.print("(");
+    Serial.print(DefaultTriggerCadence);
+    Serial.print("),");
+    Serial.print(LoggingEnabled);
+    Serial.print("(");
+    Serial.print(DefaultLoggingEnabled);
+    Serial.print(")/");
+    Serial.print(LoggingInterval);
+    Serial.print("(");
+    Serial.print(DefaultLoggingInterval);
+    Serial.println(")");
+ }
+
 void setup()
  {
    pinMode(LedPin, OUTPUT);
-   pinMode(SwitchPin, INPUT);   
-   
-   MinTriggerPeriod = floor((1/TriggerStepsPerMax) * 60 * 1000);
-   LastDebounceTime = 0;
-#ifdef debug
-   //Initialize serial and wait for port to open:
-   Serial.begin(9600); 
-   while (!Serial) 
+   Serial.begin(SerialBaudRate); 
+   while (!Serial) // FIXME - we need to make sure we can get to serial without blocking boot up
      {
      ; // wait for serial port to connect. Needed for Leonardo only
      }
-     Serial.println("Debugger Connected");
-     Serial.println("==================");
-     Serial.println("Setup");
-     Serial.println("------------------------");
-     Serial.print("Walk Char= ");
-     Serial.println(WalkCommandChar);
-     Serial.print("Default TriggerStepsPerMin= ");
-     Serial.println(TriggerStepsPerMin);
-     Serial.print("MinTriggerPeriod= ");
-     Serial.println(MinTriggerPeriod);
-     Serial.print("DebounceDelay= ");
-     Serial.println(DebounceDelay);
-     Serial.println("------------------------");
-#endif
+   
+   MinTriggerPeriod = floor((1/TriggerStepsPerMax) * 60 * 1000);
+   LastDebounceTime = 0;
+
    
    //Interrupt 1 is digital pin 2, so that is where the reed switch is connected
    //Triggers on FALLING (change from HIGH to LOW)
    attachInterrupt(InterruptNumber, StepsCalc, FALLING);
 
    InitializeWalkingVariables();
+
+   LastLogTime = millis();
    
    Keyboard.begin();
+   Serial.println("R"); // send ready signal
+   SendStateMessage();
  }
 
  void loop()
  {
    delay(DebounceDelay+50);  // delay should be longer than the debounce time
+
+   if (Serial.available())
+     {
+     // FIXME - replace with C-string functions later for stability 
+     String command = Serial.readStringUntil('\n'); 
+     int nextStart = 0;
+     if (command.charAt(0) == 'Q')
+       SendStateMessage();
+     else if (command.charAt(0) == 'S')
+       {
+       // find new walk character
+       nextStart = 2;
+       WalkCharacter = command.charAt(nextStart);
+
+       // find new enabled flag
+       nextStart = command.indexOf(',', nextStart);
+       HoloseatEnabled = command.substring(nextStart+1).toInt();
+
+       // find trigger cadence
+       nextStart = command.indexOf(',', nextStart+1);
+       TriggerCadence = command.substring(nextStart+1).toInt();
+
+       // find new enable logging
+       nextStart = command.indexOf(',', nextStart+1);
+       LoggingEnabled = command.substring(nextStart+1).toInt();
+
+       // find the new logging interval
+       nextStart = command.indexOf(',', nextStart+1);    
+       LoggingInterval = command.substring(nextStart+1).toInt();
+       
+       Serial.println("OK");
+       }
+     else
+       Serial.println("ERROR");  
+     }
+
+   if (LoggingEnabled && (millis() - LastLogTime >= (100 * LoggingInterval)))  // measured in 1/10 sec
+     {
+     LastLogTime = millis();
+     SendStateMessage();
+     }
    
-   if (digitalRead(SwitchPin) == HIGH)
+   if (HoloseatEnabled)
      {
      digitalWrite(LedPin, HIGH);
      // Don't process interrupts during calculations
@@ -131,22 +195,15 @@ void setup()
  
      StepPeriod = millis() - LastStepTime;
      StepsPerMin = (1.0/max(StepPeriod, StepPeriodTriggered)) * 60.0 * 1000.0;
-
-     // Calculate actual trigger rate based on potentiometer value
-     float calculatedTriggerStepsPerMin = TriggerStepsPerMin;
    
      // If step rate is fast enough, send a "w";  note, only call the keyboard library
      // our walking state has changed. 
-     WalkingState = StepsPerMin > calculatedTriggerStepsPerMin;
-   
-     if ((LastWalkingState || (StepsPerMin > (calculatedTriggerStepsPerMin/2))))
-        LogDebugInfo(calculatedTriggerStepsPerMin, extraStep);
+     WalkingState = StepsPerMin > TriggerCadence;
       
       if (!WalkingState)
         {  
         if (LastStepPeriod > StepPeriod)
           {
-          LogDebugInfo(0, extraStep);
           WalkNSteps(20);
           }
         }  
@@ -156,7 +213,7 @@ void setup()
        LastWalkingState = WalkingState;
        if (WalkingState)
          {
-         Keyboard.press(WalkCommandChar);
+         Keyboard.press(WalkCharacter);
          }
        else
          {
@@ -172,7 +229,7 @@ void setup()
      //Restart the interrupt processing
      attachInterrupt(InterruptNumber, StepsCalc, FALLING);
      }
-   else  // switch is turned "off"
+   else  // Holoseat disabled
      {
      digitalWrite(LedPin, LOW);
      if (WalkingState)  // if we were walking, need to stop and need to clear state
@@ -185,45 +242,16 @@ void setup()
   
 void WalkNSteps(int n)
 {
-  Keyboard.press(WalkCommandChar);
+  Keyboard.press(WalkCharacter);
   delay(10*n);
   Keyboard.releaseAll(); 
 }
- 
- 
- void LogDebugInfo(float spm, boolean extraStep)
- {
- #ifdef debug 
-   Serial.print("LWS=");
-   Serial.print(LastWalkingState);
-   Serial.print(" | WS=");
-   Serial.print(WalkingState);
-   Serial.print(" | ExtraStep=");
-   Serial.print(extraStep);
-   Serial.print(" | LastPeriod=");
-   Serial.print(LastStepPeriod);
-   Serial.print(" | Period=");
-   Serial.print(StepPeriod);
-   Serial.print(" | LastPeriodT=");
-   Serial.print(LastStepPeriodTriggered);
-   Serial.print(" | PeriodT=");
-   Serial.print(StepPeriodTriggered);
-   Serial.print(" | Steps=");
-   Serial.print(StepCount);
-   Serial.print(" | LastSteps=");
-   Serial.print(LastStepCount);
-   Serial.print(" | SPM=");
-   Serial.print(StepsPerMin,1);
-   Serial.print(" | Trigger=");
-   Serial.println(spm,1);  
-#endif
- }
  
 void InitializeWalkingVariables()
 {
    StepsPerMin = 0;
    LastStepTime = millis()-5000;          // initialize step times to 5 seconds in the past so we do not trigger walking on setup
-   StepPeriodTriggered = ((1 / TriggerStepsPerMin) * 60 * 1000) + 100;  // initialize to just slower than walking speed
+   StepPeriodTriggered = ((1 / TriggerCadence) * 60 * 1000) + 100;  // initialize to just slower than walking speed
    LastStepPeriodTriggered = StepPeriodTriggered;
    StepPeriod = 0;
    LastStepPeriod = 0;
