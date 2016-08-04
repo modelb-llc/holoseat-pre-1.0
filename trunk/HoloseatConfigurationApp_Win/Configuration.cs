@@ -49,28 +49,28 @@ namespace HoloSeatConfig
 
 
 
-        private void Save_Click(object sender, EventArgs e)
-        {
-            Result.Text = "";
-            UploadResult.Text = "";
-            int UpdateResult;
+        private void UpdateHoloseat_Click(object sender, EventArgs e)
+        {           
             HoloConfig.TriggerStepsPerMin = TriggerSteps.Value;
             HoloConfig.WalkCommandChar = Convert.ToChar(WalkKey.Text);
             HoloConfig.SerialPort = SerialPortList.SelectedItem.ToString();
-            Result.Text = HoloConfig.WriteConfiguration();
-            UpdateResult = HoloConfig.UpdateHoloseat();
-            switch (UpdateResult)
-            {
-                case 0:
-                    UploadResult.Text = "Success";
-                    break;
-                default:
-                    UploadResult.Text = "Failed to upload(Error code:" + UpdateResult.ToString() + ").";
-                    break;
-            }
+            HoloConfig.HardwareType = HardwareType.SelectedItem.ToString();
+            SerialOutput.Text = HoloConfig.SendConfig();
+            //Original code which executed a reprogram.  Being replaced with code to talk to the serial port.
+            //Result.Text = HoloConfig.WriteConfiguration();
+            //UpdateResult = HoloConfig.UpdateHoloseat();
+            //switch (UpdateResult)
+            //{
+            //    case 0:
+            //        UploadResult.Text = "Success";
+            //        break;
+            //    default:
+            //        UploadResult.Text = "Failed to upload(Error code:" + UpdateResult.ToString() + ").";
+            //        break;
+            //}
         }
 
-        private void SaveClose_Click(object sender, EventArgs e)
+        private void UpdateDefaults_Click(object sender, EventArgs e)
         {
             Result.Text = "";
             UploadResult.Text = "";
@@ -78,6 +78,7 @@ namespace HoloSeatConfig
             HoloConfig.TriggerStepsPerMin = TriggerSteps.Value;
             HoloConfig.WalkCommandChar = Convert.ToChar(WalkKey.Text);
             HoloConfig.SerialPort = SerialPortList.SelectedItem.ToString();
+            HoloConfig.HardwareType = HardwareType.SelectedItem.ToString();
             string SaveResult;
             SaveResult = HoloConfig.WriteConfiguration();
             UpdateResult = HoloConfig.UpdateHoloseat();
@@ -90,10 +91,7 @@ namespace HoloSeatConfig
                     UploadResult.Text="Failed to upload(Error code:"+ UpdateResult.ToString()+").";
                     break;
             }
-            if (SaveResult=="Success" & UploadResult.Text=="Success")
-                ActiveForm.Close();
-            else
-                Result.Text = SaveResult;
+            Result.Text = SaveResult;
 
         }
 
@@ -104,18 +102,26 @@ namespace HoloSeatConfig
 
         }
 
-        private void Cancel_Click(object sender, EventArgs e)
+        private void Close_Click(object sender, EventArgs e)
         {
             ActiveForm.Close();
         }
 
+        private void label6_Click(object sender, EventArgs e)
+        {
 
+        }
 
- 
-
-
-
-
-
+        private void EnableHoloseat_CheckedChanged(object sender, EventArgs e)
+        {
+            if (EnableHoloseat.Checked)
+            {
+                HoloConfig.HoloSeatOn = true;
+            }
+            else
+            {
+                HoloConfig.HoloSeatOn = false;
+            }
+        }
     }
 }

@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows.Forms;
 using HoloSeatConfig.Properties;
-using System.Drawing;
 
 namespace HoloSeatConfig
 {
-	/// <summary>
-	/// 
-	/// </summary>
-	class ContextMenus
+    /// <summary>
+    /// 
+    /// </summary>
+    class ContextMenus
 	{
 		/// <summary>
 		/// Is the About box displayed?
