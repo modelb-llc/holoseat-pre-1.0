@@ -28,7 +28,7 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
-/* $Id: io43u32x.h,v 1.5 2005/11/10 22:19:07 joerg_wunsch Exp $ */
+/* $Id: io43u32x.h 1873 2009-02-11 17:53:39Z arcanum $ */
 
 /* avr/io43u32x.h - definitions for AT43USB32x */
 
@@ -425,8 +425,9 @@
 #define    TXB8         0
 
 /* Constants */
+#define    RAMSTART 0x60
 #define    RAMEND   0x025F     /*Last On-Chip SRAM Location*/
-#define    XRAMEND  0x025F
+#define    XRAMEND  RAMEND
 #define    E2END    0x0000
 
 /* FIXME: should be 0x1FFFF for max 128K (64K*16) external program memory,
