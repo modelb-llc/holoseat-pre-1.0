@@ -132,11 +132,11 @@ namespace HoloSeatConfig
                     ConfigFile.WriteLine("");
                     ConfigFile.WriteLine("// default parameter values for Holoseat");
                     ConfigFile.WriteLine("  // What key is sent to move the character in the game");                
-                    ConfigFile.WriteLine("const float TriggerStepsPerMin = " + TriggerStepsPerMin.ToString() + ";");
+                    ConfigFile.WriteLine("const char DefaultWalkCharacter = '" + WalkCommandChar.ToString() + "';");
                     ConfigFile.WriteLine("  // Is the Holoseat enabled by default?");
                     ConfigFile.WriteLine("const unsigned int DefaultHoloseatEnabled = " + HoloSeatEnable().ToString() + ";");
                     ConfigFile.WriteLine("  // How fast does the user need to pedal (in RPM) to trigger walking?");
-                    ConfigFile.WriteLine("const unsigned int DefaultTriggerCadence = '" + WalkCommandChar.ToString() + "';");
+                    ConfigFile.WriteLine("const unsigned int DefaultTriggerCadence = " + TriggerStepsPerMin.ToString() + ";");
                     ConfigFile.WriteLine("  // Is serial logging enabled by default?");
                     ConfigFile.WriteLine("const unsigned int DefaultLoggingEnabled = 0;");
                     ConfigFile.WriteLine("  // How long between messages in serial logging in deci-seconds (0.1 of a second)");
@@ -148,7 +148,7 @@ namespace HoloSeatConfig
                     ConfigFile.WriteLine("");
                     ConfigFile.WriteLine("// other boot parameters");
                     ConfigFile.WriteLine("const unsigned int SerialBaudRate = 57600;");
-                    ConfigFile.WriteLine("ConfigFile.WriteLine(\"#endif\");");
+                    ConfigFile.WriteLine("#endif");
                 }
                 return "Success";
             }
@@ -214,6 +214,7 @@ namespace HoloSeatConfig
         public int UpdateHoloseat()
         {
             SetArguments();
+            WriteConfiguration();
             System.Diagnostics.Process ArduinoUpload = new System.Diagnostics.Process();
             ArduinoUpload.StartInfo.FileName = ArduinoInstallLocation;
             if (NoArduino==true)

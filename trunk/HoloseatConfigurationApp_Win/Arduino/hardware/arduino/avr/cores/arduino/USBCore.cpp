@@ -35,7 +35,6 @@ extern const u8 STRING_PRODUCT[] PROGMEM;
 extern const u8 STRING_MANUFACTURER[] PROGMEM;
 extern const DeviceDescriptor USB_DeviceDescriptor PROGMEM;
 extern const DeviceDescriptor USB_DeviceDescriptorB PROGMEM;
-extern bool _updatedLUFAbootloader;
 
 const u16 STRING_LANGUAGE[2] = {
 	(3<<8) | (2+2),
@@ -426,24 +425,13 @@ static bool USB_SendStringDescriptor(const u8*string_P, u8 string_len, uint8_t f
 }
 
 //	Does not timeout or cross fifo boundaries
+//	Will only work for transfers <= 64 bytes
+//	TODO
 int USB_RecvControl(void* d, int len)
 {
-	auto length = len;
-	while(length)
-	{
-		// Dont receive more than the USB Control EP has to offer
-		// Use fixed 64 because control EP always have 64 bytes even on 16u2.
-		auto recvLength = length;
-		if(recvLength > 64){
-			recvLength = 64;
-		}
-
-		// Write data to fit to the end (not the beginning) of the array
-		WaitOUT();
-		Recv((u8*)d + len - length, recvLength);
-		ClearOUT();
-		length -= recvLength;
-	}
+	WaitOUT();
+	Recv((u8*)d,len);
+	ClearOUT();
 	return len;
 }
 
@@ -807,12 +795,6 @@ void USBDevice_::attach()
 	UDIEN = (1<<EORSTE) | (1<<SOFE) | (1<<SUSPE);	// Enable interrupts for EOR (End of Reset), SOF (start of frame) and SUSPEND
 	
 	TX_RX_LED_INIT;
-
-#if MAGIC_KEY_POS != (RAMEND-1)
-	if (pgm_read_word(FLASHEND - 1) == NEW_LUFA_SIGNATURE) {
-		_updatedLUFAbootloader = true;
-	}
-#endif
 }
 
 void USBDevice_::detach()

@@ -123,5 +123,10 @@ namespace HoloSeatConfig
                 HoloConfig.HoloSeatOn = false;
             }
         }
+
+        private void Configuration_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
