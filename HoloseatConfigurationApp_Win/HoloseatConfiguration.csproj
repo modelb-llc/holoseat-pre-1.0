@@ -53,7 +53,7 @@
     <StartupObject>HoloSeatConfig.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Images\SystemTrayApp.ico</ApplicationIcon>
+    <ApplicationIcon>SystemTrayApp.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -1934,6 +1934,7 @@
     <Content Include="SharpSVN\SharpSvn.UI.pdb" />
     <Content Include="SharpSVN\SharpSvn.UI.xml" />
     <Content Include="SharpSVN\SharpSvn.xml" />
+    <Content Include="SystemTrayApp.ico" />
     <None Include="holoseat_firmware\holoseat_constants.h">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -1971,22 +1972,22 @@
   <ItemGroup>
     <PublishFile Include="Arduino\arduino.exe">
       <Visible>False</Visible>
-      <PublishState>DataFile</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>DataFile</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Arduino\cygiconv-2.dll">
       <Visible>False</Visible>
-      <PublishState>DataFile</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>DataFile</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>

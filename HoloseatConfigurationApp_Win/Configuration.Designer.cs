@@ -53,7 +53,7 @@
             // 
             // WalkKey
             // 
-            this.WalkKey.Location = new System.Drawing.Point(81, 127);
+            this.WalkKey.Location = new System.Drawing.Point(81, 105);
             this.WalkKey.Name = "WalkKey";
             this.WalkKey.Size = new System.Drawing.Size(173, 20);
             this.WalkKey.TabIndex = 1;
@@ -62,7 +62,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 127);
+            this.label1.Location = new System.Drawing.Point(9, 105);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(53, 13);
             this.label1.TabIndex = 1;
@@ -70,7 +70,7 @@
             // 
             // TriggerSteps
             // 
-            this.TriggerSteps.Location = new System.Drawing.Point(81, 153);
+            this.TriggerSteps.Location = new System.Drawing.Point(81, 131);
             this.TriggerSteps.Maximum = 120;
             this.TriggerSteps.Name = "TriggerSteps";
             this.TriggerSteps.Size = new System.Drawing.Size(173, 45);
@@ -80,7 +80,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(9, 153);
+            this.label2.Location = new System.Drawing.Point(9, 131);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(66, 13);
             this.label2.TabIndex = 3;
@@ -88,7 +88,7 @@
             // 
             // TriggerStepsNumber
             // 
-            this.TriggerStepsNumber.Location = new System.Drawing.Point(12, 178);
+            this.TriggerStepsNumber.Location = new System.Drawing.Point(12, 156);
             this.TriggerStepsNumber.Name = "TriggerStepsNumber";
             this.TriggerStepsNumber.ReadOnly = true;
             this.TriggerStepsNumber.Size = new System.Drawing.Size(57, 20);
@@ -97,7 +97,7 @@
             // 
             // UpdateHoloseat
             // 
-            this.UpdateHoloseat.Location = new System.Drawing.Point(12, 307);
+            this.UpdateHoloseat.Location = new System.Drawing.Point(12, 182);
             this.UpdateHoloseat.Name = "UpdateHoloseat";
             this.UpdateHoloseat.Size = new System.Drawing.Size(75, 43);
             this.UpdateHoloseat.TabIndex = 5;
@@ -107,7 +107,7 @@
             // 
             // CloseForm
             // 
-            this.CloseForm.Location = new System.Drawing.Point(179, 307);
+            this.CloseForm.Location = new System.Drawing.Point(179, 182);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 43);
             this.CloseForm.TabIndex = 6;
@@ -117,16 +117,16 @@
             // 
             // Result
             // 
-            this.Result.Location = new System.Drawing.Point(12, 229);
+            this.Result.Location = new System.Drawing.Point(301, 25);
             this.Result.Name = "Result";
             this.Result.ReadOnly = true;
-            this.Result.Size = new System.Drawing.Size(242, 20);
+            this.Result.Size = new System.Drawing.Size(213, 20);
             this.Result.TabIndex = 7;
             this.Result.TabStop = false;
             // 
             // UpdateDefaults
             // 
-            this.UpdateDefaults.Location = new System.Drawing.Point(93, 307);
+            this.UpdateDefaults.Location = new System.Drawing.Point(93, 182);
             this.UpdateDefaults.Name = "UpdateDefaults";
             this.UpdateDefaults.Size = new System.Drawing.Size(75, 43);
             this.UpdateDefaults.TabIndex = 8;
@@ -137,17 +137,17 @@
             // UploadResult
             // 
             this.UploadResult.AcceptsReturn = true;
-            this.UploadResult.Location = new System.Drawing.Point(13, 281);
+            this.UploadResult.Location = new System.Drawing.Point(302, 77);
             this.UploadResult.Name = "UploadResult";
             this.UploadResult.ReadOnly = true;
-            this.UploadResult.Size = new System.Drawing.Size(241, 20);
+            this.UploadResult.Size = new System.Drawing.Size(212, 20);
             this.UploadResult.TabIndex = 9;
             this.UploadResult.TabStop = false;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(9, 213);
+            this.label3.Location = new System.Drawing.Point(298, 9);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(65, 13);
             this.label3.TabIndex = 10;
@@ -156,7 +156,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(9, 265);
+            this.label4.Location = new System.Drawing.Point(298, 61);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(74, 13);
             this.label4.TabIndex = 11;
@@ -165,7 +165,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(10, 55);
+            this.label5.Location = new System.Drawing.Point(10, 33);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(55, 13);
             this.label5.TabIndex = 13;
@@ -174,7 +174,7 @@
             // SerialPortList
             // 
             this.SerialPortList.FormattingEnabled = true;
-            this.SerialPortList.Location = new System.Drawing.Point(81, 47);
+            this.SerialPortList.Location = new System.Drawing.Point(81, 25);
             this.SerialPortList.Name = "SerialPortList";
             this.SerialPortList.Size = new System.Drawing.Size(173, 21);
             this.SerialPortList.TabIndex = 14;
@@ -182,11 +182,11 @@
             // SerialOutput
             // 
             this.SerialOutput.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.SerialOutput.Location = new System.Drawing.Point(298, 79);
+            this.SerialOutput.Location = new System.Drawing.Point(301, 133);
             this.SerialOutput.Multiline = true;
             this.SerialOutput.Name = "SerialOutput";
             this.SerialOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.SerialOutput.Size = new System.Drawing.Size(213, 217);
+            this.SerialOutput.Size = new System.Drawing.Size(213, 65);
             this.SerialOutput.TabIndex = 15;
             // 
             // EnableHoloseat
@@ -194,7 +194,7 @@
             this.EnableHoloseat.AutoSize = true;
             this.EnableHoloseat.Checked = true;
             this.EnableHoloseat.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.EnableHoloseat.Location = new System.Drawing.Point(12, 104);
+            this.EnableHoloseat.Location = new System.Drawing.Point(12, 82);
             this.EnableHoloseat.Name = "EnableHoloseat";
             this.EnableHoloseat.Size = new System.Drawing.Size(104, 17);
             this.EnableHoloseat.TabIndex = 17;
@@ -209,7 +209,7 @@
             this.HardwareType.Items.AddRange(new object[] {
             "leo",
             "feather"});
-            this.HardwareType.Location = new System.Drawing.Point(81, 79);
+            this.HardwareType.Location = new System.Drawing.Point(81, 57);
             this.HardwareType.Name = "HardwareType";
             this.HardwareType.Size = new System.Drawing.Size(121, 21);
             this.HardwareType.TabIndex = 18;
@@ -218,7 +218,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(9, 87);
+            this.label7.Location = new System.Drawing.Point(9, 65);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(53, 13);
             this.label7.TabIndex = 19;
@@ -227,7 +227,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(298, 55);
+            this.label6.Location = new System.Drawing.Point(298, 108);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(68, 13);
             this.label6.TabIndex = 20;
@@ -238,7 +238,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(545, 375);
+            this.ClientSize = new System.Drawing.Size(529, 239);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.HardwareType);
@@ -261,6 +261,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Configuration";
             this.Text = "Holoseat Configuration";
+            this.Load += new System.EventHandler(this.Configuration_Load);
             ((System.ComponentModel.ISupportInitialize)(this.TriggerSteps)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
