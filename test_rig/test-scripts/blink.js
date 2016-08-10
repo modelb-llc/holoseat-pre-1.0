@@ -1,3 +1,4 @@
+// "johnny five hello world, aka blink an LED
 var raspi = require('raspi-io');
 var five = require('johnny-five');
 var board = new five.Board({
