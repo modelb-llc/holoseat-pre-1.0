@@ -32,15 +32,55 @@
 char FirmwareVersionString[] = "0.3.0";  // per wiki - https://opendesignengine.net/projects/holoseat/wiki/V0_3Description
 
 // Parameter values from holoseat_constants.h
-char WalkCharacter = DefaultWalkCharacter;
+char WalkForwardCharacter = DefaultWalkForwardCharacter;
+char WalkBackwardCharacter = DefaultWalkBackwardCharacter;
 unsigned int HoloseatEnabled = !DefaultHoloseatEnabled;  // when we wake up, we will go through the transition right away, so set up for that fact
 unsigned int TriggerCadence = DefaultTriggerCadence;
 unsigned int LoggingEnabled = DefaultLoggingEnabled;
 unsigned int LoggingInterval = DefaultLoggingInterval;
 
+// setup walking state
+boolean WalkingState;
+boolean LastWalkingState;
+int WalkingDirection;
+int LastWalkingDirection;
+
 // calculated values
 float Cadence;
 float LastLocalDeltaT;
+
+// sensor data and functions
+volatile unsigned long LastStepTime;
+volatile unsigned long LastDirectionTime;
+volatile float SensedDeltaT;
+volatile float SensedDirectionT1;
+volatile float SensedDirectionT2;
+const unsigned int CadenceInterruptNumber = 0;
+const unsigned int DirectionInterruptNumber = 1;
+
+void EnableSensors(unsigned int enable) {
+  if (enable) {
+    attachInterrupt(CadenceInterruptNumber, DetectCadence, FALLING);
+    attachInterrupt(DirectionInterruptNumber, DetermineDirection, FALLING);
+  }
+  else {
+    detachInterrupt(CadenceInterruptNumber);
+    detachInterrupt(DirectionInterruptNumber);
+  }
+}
+
+void DetectCadence() {
+  unsigned long currentTime = millis();
+  SensedDeltaT = (currentTime - LastStepTime);
+  SensedDirectionT1 = currentTime - LastDirectionTime;
+  LastStepTime = currentTime;
+}
+
+void DetermineDirection() {
+  unsigned long currentTime = millis();
+  SensedDirectionT2 = currentTime - LastStepTime;
+  LastDirectionTime = currentTime;
+}
 
 // Logging data
 volatile unsigned long LastLogTime;
@@ -51,15 +91,19 @@ void SendStateMessage() {
   
   Serial.print(FirmwareVersionString);
   Serial.print(",");
-  Serial.print(WalkCharacter);
+  Serial.print(WalkForwardCharacter);
   Serial.print("(");
-  Serial.print(DefaultWalkCharacter);
+  Serial.print(DefaultWalkForwardCharacter);
+  Serial.print("),");
+  Serial.print(WalkBackwardCharacter);
+  Serial.print("(");
+  Serial.print(DefaultWalkBackwardCharacter);
   Serial.print("),");
   Serial.print(HoloseatEnabled);
   Serial.print("(");
   Serial.print(DefaultHoloseatEnabled);
   Serial.print("),");
-  Serial.print(round(Cadence));
+  Serial.print(WalkingDirection * round(Cadence));
   Serial.print("/");
   Serial.print(TriggerCadence);
   Serial.print("(");
@@ -89,12 +133,16 @@ void ProcessSerialData() {
       SendStateMessage();
     }
     else if (command.charAt(0) == 'S') {
-      // find new walk character
+      // find new walk forward character
       nextStart = 2;
-      WalkCharacter = command.charAt(nextStart);
+      WalkForwardCharacter = command.charAt(nextStart);
+
+      // find new walk backward character
+      nextStart = command.indexOf(',', nextStart);
+      WalkBackwardCharacter = command.charAt(nextStart+1);
     
       // find new enabled flag
-      nextStart = command.indexOf(',', nextStart);
+      nextStart = command.indexOf(',', nextStart+1);
       HoloseatEnabled = command.substring(nextStart+1).toInt();
       
       // find trigger cadence
@@ -122,33 +170,6 @@ void ProcessSerialData() {
   }
 }
 
-// sensor data and functions
-volatile unsigned long LastStepTime;
-volatile float SensedDeltaT;
-const unsigned int CadenceInterruptNumber = 0;
-const unsigned int DirectionInterruptNumber = 1;
-
-void EnableSensors(unsigned int enable) {
-  if (enable) {
-    attachInterrupt(CadenceInterruptNumber, DetectCadence, FALLING);
-    attachInterrupt(DirectionInterruptNumber, DetermineDirection, FALLING);
-  }
-  else {
-    detachInterrupt(CadenceInterruptNumber);
-    detachInterrupt(DirectionInterruptNumber);
-  }
-}
-
-void DetectCadence() {
-  unsigned long currentTime = millis();
-  SensedDeltaT = (currentTime - LastStepTime);
-  LastStepTime = currentTime;
-}
-
-void DetermineDirection() {
-  return;
-}
-
 // set up enabled state variables
 int enableReading = LOW;          
 int enablePrevious = LOW;
@@ -157,10 +178,6 @@ int enablePrevious = LOW;
 int enableLedPin = 13;
 int enableButtonPin = 10;
 Bounce debouncer = Bounce();
-
-// setup walking state
-boolean WalkingState;
-boolean LastWalkingState;
 
 void setup() {
   // put your setup code here, to run once:
@@ -185,7 +202,8 @@ void setup() {
     }
 
   // override defaults
-  WalkCharacter = 'w';
+  WalkForwardCharacter = 'w';
+  WalkBackwardCharacter = 's';
   HoloseatEnabled = !true;  // when we wake up, we will go through the transition right away, so set up for that fact
   TriggerCadence = 45;
   LoggingEnabled = 1;
@@ -231,28 +249,51 @@ void HandleWalking() {
 
   // deal with walking
   WalkingState = Cadence > TriggerCadence;
-
-  if (!WalkingState) {  
-    if (LastLocalDeltaT > localDeltaT)
-      WalkNSteps(20);
+  float directionDeltaT = SensedDirectionT1 - SensedDirectionT2;
+  WalkingDirection = (directionDeltaT >= 0)?1:-1;
+ 
+/*
+  Serial.print(SensedDirectionT1);
+  Serial.print(" - ");
+  Serial.print(SensedDirectionT2);
+  Serial.print(" = ");
+  Serial.println(directionDeltaT);
+*/
+  if ((!WalkingState) && (LastLocalDeltaT > localDeltaT)) {  
+    if (WalkingDirection > 0)
+      WalkNSteps(20, WalkForwardCharacter);
+    else
+      WalkNSteps(20, WalkBackwardCharacter);
   }  
 
-  if (WalkingState != LastWalkingState) {
+  if (WalkingState && (WalkingDirection * LastWalkingDirection < 0))  // we reversed direction, stop!
+    InitializeWalkingVariables();
+
+  if ((WalkingState != LastWalkingState)) {
     LastWalkingState = WalkingState;
-    if (WalkingState)
-      Keyboard.press(WalkCharacter);
+    if (WalkingState) {
+      if (WalkingDirection > 0) {
+        Keyboard.release(WalkBackwardCharacter);
+        Keyboard.press(WalkForwardCharacter);
+      }
+      else {
+        Keyboard.release(WalkForwardCharacter);
+        Keyboard.press(WalkBackwardCharacter);
+      }
+    }
     else
-      Keyboard.releaseAll();
+      InitializeWalkingVariables();
   }
 
+  LastWalkingDirection = WalkingDirection;
   LastLocalDeltaT = localDeltaT;
   
   // re-enbale the interrupts now that we are done
   EnableSensors(true);
 }
 
-void WalkNSteps(int n) {
-  Keyboard.press(WalkCharacter);
+void WalkNSteps(int n, char c) {
+  Keyboard.press(c);
   delay(10*n);
   Keyboard.releaseAll(); 
 }
@@ -262,7 +303,11 @@ void InitializeWalkingVariables() {
   Cadence = 0.0;
   SensedDeltaT = 5000;            // initialize sensed deltaT (and the value used to compute it, LastStepTime) to 5 seconds in the past
   LastStepTime = millis() - 5000; // as above
+  SensedDirectionT1 = 1000;         
+  SensedDirectionT2 = 100;
   LastLocalDeltaT = 0;
   WalkingState = false;
   LastWalkingState = false;
+  WalkingDirection = 1;  
+  LastWalkingDirection = 1;
 }
