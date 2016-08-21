@@ -9,6 +9,6 @@ const unsigned int DefaultLoggingEnabled = 0; // Is serial logging enabled by de
 const unsigned int DefaultLoggingInterval = 10; // How long between messages in serial logging in deci-seconds (0.1 of a second)
 
 // other boot parameters
-const unsigned int SerialBaudRate = 57600;
+const unsigned int SerialBaudRate = 115200;
 
 #endif
