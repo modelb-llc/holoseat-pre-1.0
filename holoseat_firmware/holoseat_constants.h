@@ -2,7 +2,8 @@
 #define holoseat_constants_h
 
 // default parameter values for Holoseat
-const char DefaultWalkCharacter = 'w';  // What key is sent to move the character in the game
+const char DefaultWalkForwardCharacter = 'w';  // What key is sent to move the character forward in the game
+const char DefaultWalkBackwardCharacter = 's';  // What key is sent to move the character backward in the game
 const unsigned int DefaultHoloseatEnabled = 1; // Is the Holoseat enabled by default?
 const unsigned int DefaultTriggerCadence = 75; // How fast does the user need to pedal (in RPM) to trigger walking?
 const unsigned int DefaultLoggingEnabled = 0; // Is serial logging enabled by default?
