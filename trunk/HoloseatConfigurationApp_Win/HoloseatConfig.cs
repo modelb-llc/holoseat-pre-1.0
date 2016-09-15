@@ -9,7 +9,8 @@ namespace HoloSeatConfig
     {
         //Publically accessible variables for the number of steps constant and the walk command constant
         public double TriggerStepsPerMin;
-        public char WalkCommandChar;
+        public char WalkForwardCommandChar;
+        public char WalkBackwardCommandChar;
         public string SerialPort;
         public string HardwareType; //Valid types as of this version are "feather" for the Adafruit feather boards or "leo" for the Arduino Leonardo board
         public string SerialLog;
@@ -31,9 +32,10 @@ namespace HoloSeatConfig
         public HoloseatConfigurationFile()
         {           
             TriggerStepsPerMin = 75;
-            WalkCommandChar = 'W';
+            WalkForwardCommandChar = 'W';
+            WalkBackwardCommandChar = 'S';
             SerialPort = "COM0";
-            HardwareType = "leo";
+            HardwareType = "feather";
             using (StreamReader FileLine = new StreamReader(ConstantsFile))
                 while (FileLine.Peek() >= 0)
                 {
@@ -47,9 +49,14 @@ namespace HoloSeatConfig
                                     TriggerStepsPerMin = Convert.ToDouble(CurrentLine.Split('=')[1].Replace(';', ' ').Trim());
                                     break;
                                 }
-                            case "const char DefaultWalkCharacter ":
+                            case "const char DefaultWalkForwardCharacter ":
                                 {
-                                    WalkCommandChar = Convert.ToChar(CurrentLine.Split('=')[1].Replace(';', ' ').Replace('\'', ' ').Trim());
+                                    WalkForwardCommandChar = Convert.ToChar(CurrentLine.Split('=')[1].Replace(';', ' ').Replace('\'', ' ').Trim());
+                                    break;
+                                }
+                            case "const char DefaultWalkBackwardCharacter ":
+                                {
+                                    WalkBackwardCommandChar = Convert.ToChar(CurrentLine.Split('=')[1].Replace(';', ' ').Replace('\'', ' ').Trim());
                                     break;
                                 }
                             case "//Serial Port ":
@@ -102,7 +109,7 @@ namespace HoloSeatConfig
             String ConfigString;
             Boolean SendCommandResult;
             // String format <WC>,<E>,<TC>,<L>,<LI> - example: S t,0,60,0,20
-            ConfigString = "S " + WalkCommandChar + "," + HoloSeatEnable() + "," + TriggerStepsPerMin + "," + DebugEnable + "," + DebugRate;
+            ConfigString = "S " + WalkForwardCommandChar + "," + WalkBackwardCommandChar + "," + HoloSeatEnable() + "," + TriggerStepsPerMin + "," + DebugEnable + "," + DebugRate;
             SendCommandResult = SendCommandToSerial(ConfigString);
             return SerialLog;
         }
@@ -131,8 +138,10 @@ namespace HoloSeatConfig
                     ConfigFile.WriteLine("#define holoseat_constants_h");
                     ConfigFile.WriteLine("");
                     ConfigFile.WriteLine("// default parameter values for Holoseat");
-                    ConfigFile.WriteLine("  // What key is sent to move the character in the game");                
-                    ConfigFile.WriteLine("const char DefaultWalkCharacter = '" + WalkCommandChar.ToString() + "';");
+                    ConfigFile.WriteLine("  // What key is sent to move the character in the game forward");                
+                    ConfigFile.WriteLine("const char DefaultWalkForwardCharacter = '" + WalkForwardCommandChar.ToString() + "';");
+                    ConfigFile.WriteLine("  // What key is sent to move the character in the game backward");
+                    ConfigFile.WriteLine("const char DefaultWalkBackwardCharacter = '" + WalkBackwardCommandChar.ToString() + "';");
                     ConfigFile.WriteLine("  // Is the Holoseat enabled by default?");
                     ConfigFile.WriteLine("const unsigned int DefaultHoloseatEnabled = " + HoloSeatEnable().ToString() + ";");
                     ConfigFile.WriteLine("  // How fast does the user need to pedal (in RPM) to trigger walking?");

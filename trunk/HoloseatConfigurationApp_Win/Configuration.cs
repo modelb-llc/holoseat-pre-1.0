@@ -18,7 +18,8 @@ namespace HoloSeatConfig
         public Configuration()
         {
             InitializeComponent();
-            WalkKey.Text = HoloConfig.WalkCommandChar.ToString();
+            WalkForwardKey.Text = HoloConfig.WalkForwardCommandChar.ToString();
+            WalkBackwardKey.Text = HoloConfig.WalkBackwardCommandChar.ToString();
             TriggerSteps.Value = Convert.ToInt16(HoloConfig.TriggerStepsPerMin);
             TriggerStepsNumber.Text = TriggerSteps.Value.ToString();
             int x = 1;
@@ -52,7 +53,8 @@ namespace HoloSeatConfig
         private void UpdateHoloseat_Click(object sender, EventArgs e)
         {           
             HoloConfig.TriggerStepsPerMin = TriggerSteps.Value;
-            HoloConfig.WalkCommandChar = Convert.ToChar(WalkKey.Text);
+            HoloConfig.WalkForwardCommandChar = Convert.ToChar(WalkForwardKey.Text);
+            HoloConfig.WalkBackwardCommandChar = Convert.ToChar(WalkBackwardKey.Text);
             HoloConfig.SerialPort = SerialPortList.SelectedItem.ToString();
             HoloConfig.HardwareType = HardwareType.SelectedItem.ToString();
             SerialOutput.Text = HoloConfig.SendConfig();
@@ -76,7 +78,8 @@ namespace HoloSeatConfig
             UploadResult.Text = "";
             int UpdateResult;
             HoloConfig.TriggerStepsPerMin = TriggerSteps.Value;
-            HoloConfig.WalkCommandChar = Convert.ToChar(WalkKey.Text);
+            HoloConfig.WalkForwardCommandChar = Convert.ToChar(WalkForwardKey.Text);
+            HoloConfig.WalkBackwardCommandChar = Convert.ToChar(WalkBackwardKey.Text);
             HoloConfig.SerialPort = SerialPortList.SelectedItem.ToString();
             HoloConfig.HardwareType = HardwareType.SelectedItem.ToString();
             string SaveResult;
@@ -97,8 +100,8 @@ namespace HoloSeatConfig
 
         private void WalkKey_TextChanged(object sender, EventArgs e)
         {
-            if (WalkKey.TextLength>1)
-                WalkKey.Text=WalkKey.Text.Substring(1,1);
+            if (WalkForwardKey.TextLength>1)
+                WalkForwardKey.Text=WalkForwardKey.Text.Substring(1,1);
 
         }
 
@@ -125,6 +128,16 @@ namespace HoloSeatConfig
         }
 
         private void Configuration_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void WalkBackwardKey_TextChanged(object sender, EventArgs e)
         {
 
         }

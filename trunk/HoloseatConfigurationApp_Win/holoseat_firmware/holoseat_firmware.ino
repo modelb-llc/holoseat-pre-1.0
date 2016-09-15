@@ -1,4 +1,6 @@
-/* Copyright (C) 2013 - J. Simmons https://opendesignengine.net/projects/holoseat/
+/* Copyright (C) 2016 Model B, LLC
+ * author: J. Simmons 
+ * https://opendesignengine.net/projects/holoseat/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,261 +20,294 @@
  * This firmware detects the speed of an exercise bike or eliptical machine and
  * when the speed is greater than a trigger value sends the "w" key to trigger 
  * walking in video games such as FPSs, RPGs, and MMOs.
- * 
- * The code in this firmware is based upon a number of freely available tutorials,
- * including:
- *  - http://www.instructables.com/id/Arduino-Bike-Speedometer/
- *  - http://arduino.cc/en/Tutorial/Blink?from=Tutorial.BlinkingLED
  */
- 
- #include "holoseat_constants.h"
- #include "Keyboard.h"
- #include "math.h"
- 
-char FirmwareVersionString[] = "0.0.0";
- 
-volatile unsigned long LastDebounceTime;
-volatile unsigned long LastStepTime;
-volatile unsigned long StepPeriodTriggered;
-volatile unsigned int StepCount;
-volatile unsigned long LastLogTime;
 
-const long DebounceDelay = 100;    // the debounce time; increase if walking jitters
-const float TriggerStepsPerMax = 175;
-const unsigned int InterruptNumber = 1;
-const int LedPin =  13;
+ //#define DEBUG
 
-// Parameter values
-char WalkCharacter = DefaultWalkCharacter;
-unsigned int HoloseatEnabled = DefaultHoloseatEnabled;
+ #include "holoseat_constants.h"  // contains holoseat configuration settings
+ #include "Keyboard.h"            // for sending the walk keys
+ #include "math.h"                // ??
+ #include <Bounce2.h>             // for debouncing the enable button
+ 
+char FirmwareVersionString[] = "0.3.0";  // per wiki - https://opendesignengine.net/projects/holoseat/wiki/V0_3Description
+
+// Parameter values from holoseat_constants.h
+char WalkForwardCharacter = DefaultWalkForwardCharacter;
+char WalkBackwardCharacter = DefaultWalkBackwardCharacter;
+unsigned int HoloseatEnabled = !DefaultHoloseatEnabled;  // when we wake up, we will go through the transition right away, so set up for that fact
 unsigned int TriggerCadence = DefaultTriggerCadence;
 unsigned int LoggingEnabled = DefaultLoggingEnabled;
 unsigned int LoggingInterval = DefaultLoggingInterval;
 
-float StepsPerMin;
-unsigned long MinTriggerPeriod;
+// setup walking state
 boolean WalkingState;
 boolean LastWalkingState;
-unsigned long StepPeriod;
-unsigned long  LastStepPeriod;
-unsigned int LastStepCount;
-unsigned long LastStepPeriodTriggered;
-unsigned int ExtraSteps;
+int WalkingDirection;
+int LastWalkingDirection;
 
-void StepsCalc()
- {
-   if (millis() - LastDebounceTime > DebounceDelay)
-     {
-     StepPeriodTriggered = millis() - LastStepTime;
-     LastStepTime = millis();
-     StepCount++;
-     }
-     
-   LastDebounceTime = millis();  
- }
+// calculated values
+float Cadence;
+float LastLocalDeltaT;
 
-void SendStateMessage()
- {
-    if(!Serial) // if the serial port connection is not available, skip state message
-      return;
-  
-    Serial.print(FirmwareVersionString);
-    Serial.print(",");
-    Serial.print(WalkCharacter);
-    Serial.print("(");
-    Serial.print(DefaultWalkCharacter);
-    Serial.print("),");
-    Serial.print(HoloseatEnabled);
-    Serial.print("(");
-    Serial.print(DefaultHoloseatEnabled);
-    Serial.print("),");
-    Serial.print(round(StepsPerMin));
-    Serial.print("/");
-    Serial.print(TriggerCadence);
-    Serial.print("(");
-    Serial.print(DefaultTriggerCadence);
-    Serial.print("),");
-    Serial.print(LoggingEnabled);
-    Serial.print("(");
-    Serial.print(DefaultLoggingEnabled);
-    Serial.print(")/");
-    Serial.print(LoggingInterval);
-    Serial.print("(");
-    Serial.print(DefaultLoggingInterval);
-    Serial.println(")");
- }
+// sensor data and functions
+volatile unsigned long LastStepTime;
+volatile unsigned long LastDirectionTime;
+volatile float SensedDeltaT;
+volatile float SensedDirectionT1;
+volatile float SensedDirectionT2;
+const unsigned int CadenceInterruptNumber = 0;
+const unsigned int DirectionInterruptNumber = 1;
 
-void setup()
- {
-   pinMode(LedPin, OUTPUT);
-   Serial.begin(SerialBaudRate); 
-   
-   MinTriggerPeriod = floor((1/TriggerStepsPerMax) * 60 * 1000);
-   LastDebounceTime = 0;
-
-   
-   //Interrupt 1 is digital pin 2, so that is where the reed switch is connected
-   //Triggers on FALLING (change from HIGH to LOW)
-   attachInterrupt(InterruptNumber, StepsCalc, FALLING);
-
-   InitializeWalkingVariables();
-
-   LastLogTime = millis();
-   
-   Keyboard.begin();
-
-/* hold this code for use in debugger mode - to be developed later
-   while (!Serial)
-     {
-     ;
-     }
-   Serial.println("R"); // send ready signal, if there is a serial connection
-   SendStateMessage();
-*/
+void EnableSensors(unsigned int enable) {
+  if (enable) {
+    attachInterrupt(CadenceInterruptNumber, DetectCadence, FALLING);
+    attachInterrupt(DirectionInterruptNumber, DetermineDirection, FALLING);
+  }
+  else {
+    detachInterrupt(CadenceInterruptNumber);
+    detachInterrupt(DirectionInterruptNumber);
+  }
 }
 
- void loop()
- {
-   delay(DebounceDelay+50);  // delay should be longer than the debounce time
+void DetectCadence() {
+  unsigned long currentTime = millis();
+  SensedDeltaT = (currentTime - LastStepTime);
+  SensedDirectionT1 = currentTime - LastDirectionTime;
+  LastStepTime = currentTime;
+}
 
-   if (Serial && Serial.available())
-     {
-     // FIXME - replace with C-string functions later for stability 
-     String command = Serial.readStringUntil('\n'); 
-     int nextStart = 0;
-     
-     if (command.charAt(0) == '?')
-       {
-       Serial.println("R"); // send ready signal
-       SendStateMessage();
-       }
-     else if (command.charAt(0) == 'Q')
-       {
-       SendStateMessage();
-       }
-     else if (command.charAt(0) == 'S')
-       {
-       // find new walk character
-       nextStart = 2;
-       WalkCharacter = command.charAt(nextStart);
+void DetermineDirection() {
+  unsigned long currentTime = millis();
+  SensedDirectionT2 = currentTime - LastStepTime;
+  LastDirectionTime = currentTime;
+}
 
-       // find new enabled flag
-       nextStart = command.indexOf(',', nextStart);
-       HoloseatEnabled = command.substring(nextStart+1).toInt();
+// Logging data
+volatile unsigned long LastLogTime;
 
-       // find trigger cadence
-       nextStart = command.indexOf(',', nextStart+1);
-       TriggerCadence = command.substring(nextStart+1).toInt();
+void SendStateMessage() {
+  if(!Serial) // if the serial port connection is not available, skip state message
+    return;
+  
+  Serial.print(FirmwareVersionString);
+  Serial.print(",");
+  Serial.print(WalkForwardCharacter);
+  Serial.print("(");
+  Serial.print(DefaultWalkForwardCharacter);
+  Serial.print("),");
+  Serial.print(WalkBackwardCharacter);
+  Serial.print("(");
+  Serial.print(DefaultWalkBackwardCharacter);
+  Serial.print("),");
+  Serial.print(HoloseatEnabled);
+  Serial.print("(");
+  Serial.print(DefaultHoloseatEnabled);
+  Serial.print("),");
+  Serial.print(WalkingDirection * round(Cadence));
+  Serial.print("/");
+  Serial.print(TriggerCadence);
+  Serial.print("(");
+  Serial.print(DefaultTriggerCadence);
+  Serial.print("),");
+  Serial.print(LoggingEnabled);
+  Serial.print("(");
+  Serial.print(DefaultLoggingEnabled);
+  Serial.print(")/");
+  Serial.print(LoggingInterval);
+  Serial.print("(");
+  Serial.print(DefaultLoggingInterval);
+  Serial.println(")");
+}
 
-       // find new enable logging
-       nextStart = command.indexOf(',', nextStart+1);
-       LoggingEnabled = command.substring(nextStart+1).toInt();
+void ProcessSerialData() {
+  if (Serial && Serial.available()) {
+    // FIXME - replace with C-string functions later for stability 
+    String command = Serial.readStringUntil('\n'); 
+    int nextStart = 0;
+  
+    if (command.charAt(0) == '?') {
+      Serial.println("R"); // send ready signal
+      SendStateMessage();
+    }
+    else if (command.charAt(0) == 'Q') {
+      SendStateMessage();
+    }
+    else if (command.charAt(0) == 'S') {
+      // find new walk forward character
+      nextStart = 2;
+      WalkForwardCharacter = command.charAt(nextStart);
 
-       // find the new logging interval
-       nextStart = command.indexOf(',', nextStart+1);    
-       LoggingInterval = command.substring(nextStart+1).toInt();
-       
-       Serial.println("OK");
-       }
-     else
-       Serial.println("ERROR");  
-     }
-
-   if (LoggingEnabled && (millis() - LastLogTime >= (100 * LoggingInterval)))  // measured in 1/10 sec
-     {
-     LastLogTime = millis();
-     SendStateMessage();
-     }
-   
-   if (HoloseatEnabled)
-     {
-     digitalWrite(LedPin, HIGH);
-     // Don't process interrupts during calculations
-     detachInterrupt(InterruptNumber);
-   
-     // set of conditions under which we have detected false "extra" steps
-     // * both this step count and the last one are > 0
-     // * this step count is > 1
-     // * walk rate exceeds 2*TriggerRate (aka trigger period < min trigger
-     boolean extraStep = ((StepCount > 0) && (LastStepCount > 0)) || (StepCount > 1) || (StepPeriodTriggered < MinTriggerPeriod);
-   
-     if (extraStep && (ExtraSteps < 2))
-       {
-       StepPeriodTriggered = LastStepPeriodTriggered;
-       LastStepCount = 0;
-       ExtraSteps++;
-       } 
-     else
-       {
-       ExtraSteps = 0;
-       }
- 
-     StepPeriod = millis() - LastStepTime;
-     StepsPerMin = (1.0/max(StepPeriod, StepPeriodTriggered)) * 60.0 * 1000.0;
-   
-     // If step rate is fast enough, send a "w";  note, only call the keyboard library
-     // our walking state has changed. 
-     WalkingState = StepsPerMin > TriggerCadence;
+      // find new walk backward character
+      nextStart = command.indexOf(',', nextStart);
+      WalkBackwardCharacter = command.charAt(nextStart+1);
+    
+      // find new enabled flag
+      nextStart = command.indexOf(',', nextStart+1);
+      HoloseatEnabled = command.substring(nextStart+1).toInt();
       
-      if (!WalkingState)
-        {  
-        if (LastStepPeriod > StepPeriod)
-          {
-          WalkNSteps(20);
-          }
-        }  
+      // find trigger cadence
+      nextStart = command.indexOf(',', nextStart+1);
+      TriggerCadence = command.substring(nextStart+1).toInt();
       
-     if (WalkingState != LastWalkingState)
-       {
-       LastWalkingState = WalkingState;
-       if (WalkingState)
-         {
-         Keyboard.press(WalkCharacter);
-         }
-       else
-         {
-         Keyboard.releaseAll();
-         }
-       }
-     
-     LastStepCount = StepCount;
-     StepCount = 0; 
-     LastStepPeriod = StepPeriod;
-     LastStepPeriodTriggered = StepPeriodTriggered;
-
-     //Restart the interrupt processing
-     attachInterrupt(InterruptNumber, StepsCalc, FALLING);
-     }
-   else  // Holoseat disabled
-     {
-     digitalWrite(LedPin, LOW);
-     if (WalkingState)  // if we were walking, need to stop and need to clear state
-       {
-       Keyboard.releaseAll();
-       InitializeWalkingVariables();
-       }
-     }
+      // find new enable logging
+      nextStart = command.indexOf(',', nextStart+1);
+      LoggingEnabled = command.substring(nextStart+1).toInt();
+      
+      // find the new logging interval
+      nextStart = command.indexOf(',', nextStart+1);    
+      LoggingInterval = command.substring(nextStart+1).toInt();
+      
+      Serial.println("OK");
+    }
+    else {
+      Serial.println("ERROR");  
+    }
   }
   
-void WalkNSteps(int n)
-{
-  Keyboard.press(WalkCharacter);
+  if (LoggingEnabled && (millis() - LastLogTime >= (100 * LoggingInterval))) { // measured in 1/10 sec
+    LastLogTime = millis();
+    SendStateMessage();
+  }
+}
+
+// set up enabled state variables
+int enableReading = LOW;          
+int enablePrevious = LOW;
+
+// set up enable button elements
+int enableLedPin = 13;
+int enableButtonPin = 10;
+Bounce debouncer = Bounce();
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(enableLedPin, OUTPUT); //our ledPin is an output
+  pinMode(enableButtonPin, INPUT_PULLUP); //we're reading from the button
+  debouncer.attach(enableButtonPin);
+  debouncer.interval(5); // interval in ms
+
+  Serial.begin(SerialBaudRate);    
+  //MinTriggerPeriod = floor((1/TriggerStepsPerMax) * 60 * 1000);
+
+  InitializeWalkingVariables();
+  EnableSensors(true);
+  LastLogTime = millis();
+   
+  Keyboard.begin();
+
+#ifdef DEBUG  // when debugging, hold for the serial monitor
+  while (!Serial)
+    {
+    ;
+    }
+
+  // override defaults
+  WalkForwardCharacter = 'w';
+  WalkBackwardCharacter = 's';
+  HoloseatEnabled = !true;  // when we wake up, we will go through the transition right away, so set up for that fact
+  TriggerCadence = 45;
+  LoggingEnabled = 1;
+  LoggingInterval = 5;
+
+  // send ready message and state
+  Serial.println("R"); // send ready signal, if there is a serial connection
+  SendStateMessage();
+#endif
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  debouncer.update();
+  enableReading = debouncer.read();
+
+  ProcessSerialData();
+  
+  if (enableReading == HIGH && enablePrevious == LOW)
+    HoloseatEnabled = !HoloseatEnabled;
+
+  if (HoloseatEnabled) {
+    digitalWrite(enableLedPin, HIGH);
+    HandleWalking();
+  }
+  else {
+    digitalWrite(enableLedPin, LOW);
+    InitializeWalkingVariables();
+  }
+    
+  enablePrevious = enableReading;
+}
+
+void HandleWalking() {
+  // disable interrupts while we do some math and work the keyboard
+  EnableSensors(false);
+
+  // calculate the Cadence
+  unsigned long currentTime = millis();
+  float localDeltaT = (currentTime - LastStepTime);  
+  float deltaT = max(SensedDeltaT, localDeltaT)/1000; // in seconds
+  Cadence = 60.0/deltaT;  // in RPM
+
+  // deal with walking
+  WalkingState = Cadence > TriggerCadence;
+  float directionDeltaT = SensedDirectionT1 - SensedDirectionT2;
+  WalkingDirection = (directionDeltaT >= 0)?1:-1;
+ 
+/*
+  Serial.print(SensedDirectionT1);
+  Serial.print(" - ");
+  Serial.print(SensedDirectionT2);
+  Serial.print(" = ");
+  Serial.println(directionDeltaT);
+*/
+  if ((!WalkingState) && (LastLocalDeltaT > localDeltaT)) {  
+    if (WalkingDirection > 0)
+      WalkNSteps(20, WalkForwardCharacter);
+    else
+      WalkNSteps(20, WalkBackwardCharacter);
+  }  
+
+  if (WalkingState && (WalkingDirection * LastWalkingDirection < 0))  // we reversed direction, stop!
+    InitializeWalkingVariables();
+
+  if ((WalkingState != LastWalkingState)) {
+    LastWalkingState = WalkingState;
+    if (WalkingState) {
+      if (WalkingDirection > 0) {
+        Keyboard.release(WalkBackwardCharacter);
+        Keyboard.press(WalkForwardCharacter);
+      }
+      else {
+        Keyboard.release(WalkForwardCharacter);
+        Keyboard.press(WalkBackwardCharacter);
+      }
+    }
+    else
+      InitializeWalkingVariables();
+  }
+
+  LastWalkingDirection = WalkingDirection;
+  LastLocalDeltaT = localDeltaT;
+  
+  // re-enbale the interrupts now that we are done
+  EnableSensors(true);
+}
+
+void WalkNSteps(int n, char c) {
+  Keyboard.press(c);
   delay(10*n);
   Keyboard.releaseAll(); 
 }
- 
-void InitializeWalkingVariables()
-{
-   StepsPerMin = 0;
-   LastStepTime = millis()-5000;          // initialize step times to 5 seconds in the past so we do not trigger walking on setup
-   StepPeriodTriggered = ((1 / TriggerCadence) * 60 * 1000) + 100;  // initialize to just slower than walking speed
-   LastStepPeriodTriggered = StepPeriodTriggered;
-   StepPeriod = 0;
-   LastStepPeriod = 0;
-   StepCount = 0;
-   LastStepCount = 0;
-   WalkingState = false;
-   LastWalkingState = false;
-   ExtraSteps = 0; 
-}
 
+void InitializeWalkingVariables() {
+  Keyboard.releaseAll();
+  Cadence = 0.0;
+  SensedDeltaT = 5000;            // initialize sensed deltaT (and the value used to compute it, LastStepTime) to 5 seconds in the past
+  LastStepTime = millis() - 5000; // as above
+  SensedDirectionT1 = 1000;         
+  SensedDirectionT2 = 100;
+  LastLocalDeltaT = 0;
+  WalkingState = false;
+  LastWalkingState = false;
+  WalkingDirection = 1;  
+  LastWalkingDirection = 1;
+}
