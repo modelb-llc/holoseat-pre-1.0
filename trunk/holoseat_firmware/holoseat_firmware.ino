@@ -100,7 +100,7 @@ void DetermineDirection() {
 volatile unsigned long LastLogTime;		// time since last log message was sent
 
 // formats status string and sends to serial connection if available
-// see https://opendesignengine.net/projects/holoseat/wiki/Firmware_Notes#HoloSeat-Serial-Protocol
+// see https://opendesignengine.net/projects/holoseat/wiki/Software_Source_Code#HoloSeat-Serial-Protocol
 void SendStateMessage() {
   if(!Serial) // if the serial port connection is not available, skip state message
     return;
@@ -136,7 +136,7 @@ void SendStateMessage() {
 }
 
 // Parses commands from serial connection
-// see https://opendesignengine.net/projects/holoseat/wiki/Firmware_Notes#HoloSeat-Serial-Protocol
+// see https://opendesignengine.net/projects/holoseat/wiki/Software_Source_Code#HoloSeat-Serial-Protocol
 void ProcessSerialData() {
   if (Serial && Serial.available()) {
     // FIXME - replace with C-string functions later for stability 
