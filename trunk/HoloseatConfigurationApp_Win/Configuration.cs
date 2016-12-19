@@ -31,6 +31,7 @@ namespace HoloSeatConfig
     public partial class Configuration : Form
 
     {
+        //Create the variable for handling the holoseat and set defaults using the constructor
         private HoloseatConfigurationFile HoloConfig = new HoloseatConfigurationFile(); 
         public Configuration()
         {
@@ -39,6 +40,7 @@ namespace HoloSeatConfig
             WalkBackwardKey.Text = HoloConfig.WalkBackwardCommandChar.ToString();
             TriggerSteps.Value = Convert.ToInt16(HoloConfig.TriggerStepsPerMin);
             TriggerStepsNumber.Text = TriggerSteps.Value.ToString();
+            ArduinoPath.Text = HoloConfig.ArduinoPath.ToString();
             int x = 1;
 
             foreach (string s in SerialPort.GetPortNames())
@@ -75,20 +77,9 @@ namespace HoloSeatConfig
             HoloConfig.SerialPort = SerialPortList.SelectedItem.ToString();
             HoloConfig.HardwareType = HardwareType.SelectedItem.ToString();
             SerialOutput.Text = HoloConfig.SendConfig();
-            //Original code which executed a reprogram.  Being replaced with code to talk to the serial port.
-            //Result.Text = HoloConfig.WriteConfiguration();
-            //UpdateResult = HoloConfig.UpdateHoloseat();
-            //switch (UpdateResult)
-            //{
-            //    case 0:
-            //        UploadResult.Text = "Success";
-            //        break;
-            //    default:
-            //        UploadResult.Text = "Failed to upload(Error code:" + UpdateResult.ToString() + ").";
-            //        break;
-            //}
         }
 
+//Write a new confriguration file and push it to the holoseat using the Arduino software    
         private void UpdateDefaults_Click(object sender, EventArgs e)
         {
             Result.Text = "";
@@ -99,20 +90,25 @@ namespace HoloSeatConfig
             HoloConfig.WalkBackwardCommandChar = Convert.ToChar(WalkBackwardKey.Text);
             HoloConfig.SerialPort = SerialPortList.SelectedItem.ToString();
             HoloConfig.HardwareType = HardwareType.SelectedItem.ToString();
+            HoloConfig.ArduinoPath = ArduinoPath.Text;
             string SaveResult;
             SaveResult = HoloConfig.WriteConfiguration();
-            UpdateResult = HoloConfig.UpdateHoloseat();
-            switch (UpdateResult)
-            {
-                case 0:
-                    UploadResult.Text="Success";
-                    break;
-                default:
-                    UploadResult.Text="Failed to upload(Error code:"+ UpdateResult.ToString()+").";
-                    break;
+            if (File.Exists(HoloConfig.ArduinoPath)) {
+                UpdateResult = HoloConfig.UpdateHoloseat();
+                switch (UpdateResult)
+                {
+                    case 0:
+                        UploadResult.Text = "Success";
+                        break;
+                    default:
+                        UploadResult.Text = "Failed to upload(Error code:" + UpdateResult.ToString() + ").";
+                        break;
+                }
+                Result.Text = SaveResult;
             }
-            Result.Text = SaveResult;
-
+            else{
+                Result.Text = "Error:  Arduino executable not found in specified path.";
+            }
         }
 
         private void WalkKey_TextChanged(object sender, EventArgs e)
@@ -155,6 +151,16 @@ namespace HoloSeatConfig
         }
 
         private void WalkBackwardKey_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label9_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ArduinoPath_TextChanged(object sender, EventArgs e)
         {
 
         }
