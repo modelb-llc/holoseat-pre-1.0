@@ -307,8 +307,10 @@ void HandleWalking() {
         Keyboard.press(WalkBackwardCharacter);
       }
     }
-    else 											// stopped walking
-      InitializeWalkingVariables();
+    else {										// stopped walking
+      Keyboard.releaseAll();
+      WalkingState = false;
+    }
   }
 
   // store state for next iteration
@@ -326,7 +328,7 @@ void WalkNSteps(int n, char c) {
   Keyboard.releaseAll(); 
 }
 
-// resets walking state variables, used to stop walking or when holoseat is disabled
+// resets walking state variables, used when holoseat is disabled
 void InitializeWalkingVariables() {
   Keyboard.releaseAll();
   Cadence = 0.0;
