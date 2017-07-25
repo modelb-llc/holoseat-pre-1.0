@@ -43,8 +43,11 @@ char FirmwareVersionString[] = "0.3.0";  // per wiki - https://opendesignengine.
 // Parameter values from holoseat_constants.h
 char WalkForwardCharacter = DefaultWalkForwardCharacter;
 char WalkBackwardCharacter = DefaultWalkBackwardCharacter;
-unsigned int ForwardTriggerCadence = DefaultTriggerCadence;
-unsigned int BackwardTriggerCadence = DefaultTriggerCadence;
+unsigned int BaseTriggerCadence = 25;       // first interval for trigger cadence
+unsigned int TriggerCadenceThreshold = 5;   // number of RPM above trigger cadence to step up
+unsigned int CurrentTriggerCadence = BaseTriggerCadence;
+//unsigned int ForwardTriggerCadence = DefaultTriggerCadence;
+//unsigned int BackwardTriggerCadence = DefaultTriggerCadence;
 unsigned int LoggingEnabled = DefaultLoggingEnabled;
 unsigned int LoggingInterval = DefaultLoggingInterval;
 
@@ -56,9 +59,10 @@ char CurrentPressedKey = 0;       // what is the current key being pressed, 0 me
 char DesiredPressedKey = 0;       // what key does the user want pressed, 0 means no key
 
 // calculated values
-float Cadence;			              // pedalling speed
+float Cadence;                    // pedalling speed
 volatile float SensedDeltaT;      // deltaT as calculated during interrupt calls
 volatile boolean WalkingForward;  // walking direction
+volatile boolean StepTriggered;   // have we had an unhandled step event?
 
 // sensor data and functions
 const int CadencePin = 3;                         // pin used to measure cadence
@@ -82,10 +86,11 @@ void DetectCadence() {
   SensedDeltaT = (currentTime - LastStepTime);
   LastStepTime = currentTime;
   WalkingForward = digitalRead(DirectionPin);  // CCW is forward
+  StepTriggered = true;
 }
 
 // Logging data
-volatile unsigned long LastLogTime;		// time since last log message was sent
+volatile unsigned long LastLogTime;   // time since last log message was sent
 
 // formats status string and sends to serial connection if available
 // see https://opendesignengine.net/projects/holoseat/wiki/Software_Source_Code#HoloSeat-Serial-Protocol
@@ -111,9 +116,10 @@ void SendStateMessage() {
     Serial.print("-");
   Serial.print(round(Cadence));
   Serial.print("/");
-  Serial.print(ForwardTriggerCadence);
+  Serial.print(CurrentTriggerCadence);
   Serial.print("(");
-  Serial.print(DefaultTriggerCadence);
+  //Serial.print(DefaultTriggerCadence);
+  Serial.print(0);
   Serial.print("),");
   Serial.print(LoggingEnabled);
   Serial.print("(");
@@ -155,8 +161,9 @@ void ProcessSerialData() {
       
       // find trigger cadence
       nextStart = command.indexOf(',', nextStart+1);
-      ForwardTriggerCadence = command.substring(nextStart+1).toInt();
-      BackwardTriggerCadence = ForwardTriggerCadence;
+      unsigned int foo = command.substring(nextStart+1).toInt();
+      //ForwardTriggerCadence = command.substring(nextStart+1).toInt();
+      //BackwardTriggerCadence = ForwardTriggerCadence;
       
       // find new enable logging
       nextStart = command.indexOf(',', nextStart+1);
@@ -217,8 +224,8 @@ void setup() {
   WalkForwardCharacter = 'w';
   WalkBackwardCharacter = 's';
   HoloseatEnabled = !true;  // when we wake up, we will go through the transition right away, so set up for that fact
-  ForwardTriggerCadence = 45;
-  BackwardTriggerCadence = 45;
+  //ForwardTriggerCadence = 45;
+  //BackwardTriggerCadence = 45;
   LoggingEnabled = 1;
   LoggingInterval = 5;
 
@@ -265,14 +272,47 @@ void HandleWalking() {
   float deltaT = max(SensedDeltaT, localDeltaT)/1000; // in seconds
   Cadence = round(60.0/deltaT/NumPoles);  // in RPM
 
-  // determine what key is desired
-  if (WalkingForward && (Cadence >= ForwardTriggerCadence))
-    DesiredPressedKey = WalkForwardCharacter;
-  else if (!WalkingForward && (Cadence >= BackwardTriggerCadence))
-    DesiredPressedKey = WalkBackwardCharacter;
-  else
-    DesiredPressedKey = 0;
+  // handle single stepping: single keypress for each cadence event while cadence
+  // is below BaseTriggerCadence
+  if (Cadence < BaseTriggerCadence) {
+    if (StepTriggered) {  // if a step was triggered, do 1 step
+      SelectKeyBasedOnDirection();
+      PressDesiredKey();
+      delay(100);  // approximate pressing and releasing the key
+    }
+  }
 
+  // calculate CurrentTriggerCadence and handle general walking
+  if (Cadence >= CurrentTriggerCadence) {   // only adjust trigger cadence when we pedal faster
+    unsigned int cadenceLevel = Cadence / BaseTriggerCadence;  // e.g. 36 / 15 == 2
+    unsigned int newTriggerCadence = cadenceLevel * BaseTriggerCadence;
+    if (Cadence >= (newTriggerCadence + TriggerCadenceThreshold))
+      CurrentTriggerCadence = newTriggerCadence;  // set new trigger cadence if we meet or exceed threshold
+
+    // we know Cadence is fast enough, so select direction
+    SelectKeyBasedOnDirection();
+  }
+  else {  // Cadence is not fast enough, will trigger
+          // release of key for single step or general walking
+    DesiredPressedKey = 0;
+    CurrentTriggerCadence = BaseTriggerCadence;
+    StepTriggered = false;
+  }
+
+  PressDesiredKey();
+  
+  // re-enbale the interrupts now that we are done
+  EnableSensors(true);
+}
+
+void SelectKeyBasedOnDirection() {
+  if (WalkingForward)
+    DesiredPressedKey = WalkForwardCharacter;
+  else
+    DesiredPressedKey = WalkBackwardCharacter;
+}
+
+void PressDesiredKey() {
   // handle desired pressed key
   if (DesiredPressedKey != CurrentPressedKey) { // only need to do something when there is a change 
     if (!CurrentPressedKey) {
@@ -291,17 +331,15 @@ void HandleWalking() {
       Keyboard.press(DesiredPressedKey);
       CurrentPressedKey = DesiredPressedKey;
       }
-    }
-
-  
-  // re-enbale the interrupts now that we are done
-  EnableSensors(true);
+    }  
 }
 
 // resets walking state variables, used when holoseat is disabled
 void InitializeWalkingVariables() {
   Keyboard.releaseAll();
   Cadence = 0.0;
+  CurrentTriggerCadence = BaseTriggerCadence;
+  StepTriggered = false;
   WalkingForward = true;
   SensedDeltaT = 5000;            // initialize sensed deltaT (and the value used to compute it, LastStepTime) to 5 seconds in the past
   LastStepTime = millis() - 5000; // as above
