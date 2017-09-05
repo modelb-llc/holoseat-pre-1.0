@@ -33,7 +33,7 @@
 
  //#define DEBUG
 
- #include "holoseat_constants.h"  // contains holoseat configuration settings
+ #include "holoseat-constants.h"  // contains holoseat configuration settings
  #include "Keyboard.h"            // for sending the walk keys
  #include "math.h"                // ??
  #include <Bounce2.h>             // for debouncing the enable button
