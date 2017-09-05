@@ -1,0 +1,22 @@
+{
+  "name": "test-scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": "6.1.0"
+  },
+  "dependencies": {
+    "csv": "1.1.0",
+    "dateformat": "1.0.12",
+    "johnny-five": "0.9.50",
+    "raspi-io": "6.0.1",
+    "readline-sync": "1.4.4"
+  }
+}
