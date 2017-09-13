@@ -53,6 +53,32 @@
 
         <!-- content goes here -->
 
+        <div class="rounded" style="background: #d8d8d8;">
+          <div class="container">
+            <hr class="my-1">
+            <h4>Debug Serial Monitor</h4>
+            <hr class="my-1">
+            <form>
+              <div class="form-row">
+              <div class="form-group col">
+              <label class="sr-only" for="inlineFormInputName2">Command</label>
+              <input type="text" class="form-control form-control-sm mb-2 mr-sm-2 mb-sm-0"
+              id="command" placeholder="Enter a command to send to Holoseat">
+              </div>
+
+              <div class="form-group col-0">
+              <button type="submit" class="btn btn-secondary btn-sm">Send</button>
+              </div>
+              </div>
+            </form>
+            <textarea readonly class="form-control form-control-sm" id="serialout" rows="21"></textarea>
+            <hr class="my-1">
+            <input type="checkbox" checked>&nbsp;Autoscroll
+            <input class="btn btn-secondary btn-sm" type="button" value="Clear Output">
+            <hr class="my-1">
+          </div>
+        </div>
+
         </div>
 
         <script src="/static/js/jquery-3.2.1.slim.min.js"></script>
