@@ -5,7 +5,9 @@ import pystray
 import sys
 import PIL.Image
 
+# app libs
 import webview
+import threading
 
 # built-in webserver -- replace with Flask
 import http.server
@@ -16,11 +18,25 @@ PORT = 8000
 Handler = http.server.SimpleHTTPRequestHandler
 httpd = socketserver.TCPServer(("", PORT), Handler)
 
+appWindowOpen = False
+lock = threading.Lock()
+
+
+def openAppWindow():
+    global appWindowOpen
+    if not appWindowOpen:
+        with lock:
+            appWindowOpen = True
+            webview.create_window('Holoseat', 'http://localhost:8000', width=768,
+                                  height=640, resizable=False)
+            appWindowOpen = False
+
 # pystray code
 def configure(icon):
     # need to demonize this call and ensure only one window opens
-    webview.create_window('Holoseat', 'http://localhost:8000', width=768,
-        height=640, resizable=False)
+    thread = threading.Thread(target=openAppWindow, args=())
+    thread.daemon = True                            # Daemonize thread
+    thread.start()                                  # Start the execution
 
 def exitTrayIcon(icon):
     httpd.shutdown()
