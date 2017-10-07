@@ -1,0 +1,51 @@
+{% from "macros.html" import nav_link with context %}
+{% from "macros.html" import nav_menu with context %}
+<!DOCTYPE html>
+<html>
+  <head>
+    {% block head %}
+      <title>{% block title %}{% endblock %} - Flask Super Example</title>
+    {% endblock %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  </head>
+  <body>
+    <div class="container">
+    <nav class="navbar navbar-expand-md navbar-dark rounded" style="background-color: #e17826;">
+      <a class="navbar-brand" href="/">Jinja!</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse"
+       data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+       aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="nav navbar-nav mr-auto">
+        {{ nav_link('home', 'Home') }}
+        {{ nav_menu('Things', [('thing1', 'Thing 1'), ('thing2', 'Thing 2')]) }}
+        {{ nav_menu('Help', [('about', 'About'), ('contact', 'Contact Us')]) }}
+        </ul>
+        <span class="navbar-text">
+          <em>This is a test.</em>
+        </span>
+      </div>
+    </nav>
+    <div class="container">
+      {% block heading %}
+        <h1>{% block page %}{% endblock %} - Flask Super Example</h1>
+      {% endblock %}
+      {% block content %}{% endblock %}
+      <div class="footer">
+        {% block footer %}
+          (c) 2017 Acme Industries
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/jquery-3.2.1.slim.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+  </body>
+</html>
