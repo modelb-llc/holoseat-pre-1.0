@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block title %}{{title}}{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block page %}{{title}}{% endblock %}
+{% block content %}
+<div class="rounded" style="background: #d8d8d8;">
+  <div class="container">
+    <h4>Current date/time: {{ current_time | datetimefilter }}</h4>
+    <p>My string: {{my_string}}</p>
+    <p>Value from the list: {{my_list[3]}}</p>
+    <p>Loop through the list:</p>
+    <ul>
+      {% for n in my_list %}
+      <li>{{n}}</li>
+      {% endfor %}
+    </ul>
+    <p>Same list with a filter: {{ my_list|join(', ') }}</p>
+  </div>
+</div>
+{% endblock %}

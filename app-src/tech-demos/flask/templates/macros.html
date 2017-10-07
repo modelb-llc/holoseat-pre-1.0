@@ -1,0 +1,24 @@
+{% macro nav_link(endpoint, name) %}
+{% if request.endpoint.endswith(endpoint) %}
+  <li class="nav-item active"><a class="nav-link" href="{{ url_for(endpoint) }}">{{name}}</a></li>
+{% else %}
+  <li class="nav-item"><a class="nav-link" href="{{ url_for(endpoint) }}">{{name}}</a></li>
+{% endif %}
+{% endmacro %}
+
+{% macro nav_menu(menu_name, menu_items) %}
+{% if request.endpoint in menu_items|map('first') %}
+  <li class="nav-item dropdown active">
+{% else %}
+  <li class="nav-item dropdown">
+{% endif %}
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink"
+      data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      {{menu_name}}</a>
+    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+      {% for item in menu_items %}
+        <a class="dropdown-item" href="{{ url_for(item[0]) }}">{{item[1]}}</a>
+      {% endfor %}
+    </div>
+  </li>
+{% endmacro %}
