@@ -4,12 +4,10 @@ mockup, so it is dependent on running the mockup in a separate process.  The dem
 steps are:
 
 1. Open console one
-  a. cd to tech-demos\
-  b. activate virtualenv
-  c. cd mockup\
-  d. start mockup server with: python -m http.server
+  a. activate virtualenv (in the app-src directory) 
+  b. cd tech-demos\mockup\
+  c. start mockup server with: python -m http.server
 2. Open console two
-  a. cd to tech-demos\
-  b. activate virtualenv
-  c. cd pywebview\
-  d. start app demo with: python.exe .\app-window.py
+  a. activate virtualenv (in the app-src directory)
+  b. cd tech-demos\pywebview\
+  c. start app demo with: python.exe .\app-window.py

@@ -7,10 +7,9 @@ Holoseat Serial Protocol
 Steps to run this demo:
 
 1. Start the REST server
-  a. cd to tech-demos\
-  b. activate virtualenv
-  c. cd serial-comms\
-  d. start the demo REST server with: python api.py
+  a. activate virtualenv (in the app-src directory)
+  b. cd tech-demos\serial-comms\
+  c. start the demo REST server with: python api.py
 2. Test graceful failure when no Holoseat is connected
   a. Open a web browser
   b. Go to http://localhost:8888/status
