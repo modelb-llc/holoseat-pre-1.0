@@ -16,10 +16,9 @@ Thanks to this post for the answer - https://stackoverflow.com/a/14823968
 
 The demo steps are:
 
-1. cd to tech-demos\
-2. activate virtualenv
-3. cd flask\
-4. start app demo with: python.exe .\run.py
+1. activate virtualenv (in the app-src directory)
+2. cd to tech-demos\flask\
+3. start app demo with: python.exe .\run.py
 
 You can use step 2 of the pywebview demo or a web browser (http://localhost:8000)
 to observe the web pages in the demo.

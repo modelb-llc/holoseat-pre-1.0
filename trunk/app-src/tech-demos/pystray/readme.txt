@@ -11,9 +11,8 @@ will start all three demos listed above.
 
 The demo steps are:
 
-1. cd to tech-demos\
-2. activate virtualenv
-3. cd pystray\
+1. activate virtualenv (in the app-src directory)
+2. cd to tech-demos\pystray\
 4. start app demo with: python.exe .\pystray-demo.py
 
 Once started, the demo will add a Holoseat 'h' icon to the system tray.  You can
