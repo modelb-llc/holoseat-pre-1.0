@@ -2,7 +2,14 @@
 {% block title %}Serial Monitor{% endblock %}
 
 {% block content %}
-<div class="container bg-primary text-white">
-  Serial Monitor Page
-</div>
+  {% if debug %}
+  <div class="bg-primary text-white">
+    Serial Monitor Page
+  </div>
+  {% else %}
+  <div class="bg-primary text-white">
+    Serial Monitor is only available in debug mode.
+  </div>
+  <!-- todo: add instructions for restarting app in debug mode -->
+  {% endif %}
 {% endblock %}
