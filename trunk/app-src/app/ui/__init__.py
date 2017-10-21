@@ -11,11 +11,11 @@ UI = Flask(__name__)
 from ui import views
 
 # turned off reloader per https://stackoverflow.com/a/24618018
-def uiThreadFunc(debug=False):
-    UI.run(debug=debug, threaded=True, use_reloader=False)
+def uiThreadFunc(debug=False, port=8000):
+    UI.run(debug=debug, port=port, threaded=True, use_reloader=False)
 
 # this is the function to use for starting the UI thread
-def start(debug=False):
-    uiThread = threading.Thread(target=uiThreadFunc, args=(debug,))
+def start(debug=False, port=8000):
+    uiThread = threading.Thread(target=uiThreadFunc, args=(debug,port,), name='UI-Thread')
     uiThread.setDaemon(True)
     uiThread.start()
