@@ -3,9 +3,11 @@ from flask import Flask
 
 # other imports
 import threading
+from uuid import uuid4
 
 # decalre the UI object before importing other ui modules since they need UI
 UI = Flask(__name__)
+UI.secret_key = uuid4().hex
 
 @UI.context_processor
 def inject_debug():
