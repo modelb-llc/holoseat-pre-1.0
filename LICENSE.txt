@@ -3,7 +3,7 @@ Holoseat by Model B, LLC
 holoseat.com
 dev.holoseat.com
 
-v0.3.0 OSHWA Certified OSHW
+v0.3.1 OSHWA Certified OSHW
 US000058
 
 
@@ -21,5 +21,5 @@ Docs:     Creative Commons Attribution-ShareAlike
 Documentation
 -------------
 Wiki:     https://opendesignengine.net/projects/holoseat/wiki/
-v0.3.0:   https://opendesignengine.net/projects/holoseat/wiki/V0_3Documentation
+v0.3.1:   https://opendesignengine.net/projects/holoseat/wiki/V0_3Documentation
 SVN:      https://opendesignengine.net/svn/holoseat/
