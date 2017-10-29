@@ -1,6 +1,8 @@
 import socket
 from contextlib import closing
 
+from util import holoseatSerial
+
 # from https://stackoverflow.com/a/45690594
 def findFreePort():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:

@@ -33,12 +33,20 @@
 
  //#define DEBUG
 
- #include "holoseat-constants.h"  // contains holoseat configuration settings
- #include "Keyboard.h"            // for sending the walk keys
- #include "math.h"                // ??
- #include <Bounce2.h>             // for debouncing the enable button
- 
-char FirmwareVersionString[] = "0.3.0";  // per wiki - https://opendesignengine.net/projects/holoseat/wiki/V0_3Description
+#include "holoseat-constants.h"  // contains holoseat configuration settings
+#include "Keyboard.h"            // for sending the walk keys
+#include "math.h"                // ??
+#include <Bounce2.h>             // for debouncing the enable button
+#include <ArduinoJson.h>         // for using JSON as input and output
+
+// version strings
+char FirmwareVersionString[] = "v0.4.0";
+char HspVersionString[] = "v0.4.0";
+char Hardware_v0_4_VersionString[] = "v0.4";
+char Hardware_v1_0_VersionString[] = "v1.0";
+
+// set up ArduinoJSON
+const char Error_Illegal_Verb[] = "{\"Error\":\"Illegal VERB\"}";
 
 // Parameter values from holoseat_constants.h
 char WalkForwardCharacter = DefaultWalkForwardCharacter;
@@ -131,17 +139,86 @@ void SendStateMessage() {
   Serial.println(")");
 }
 
+char* GetHardwareVersion() {
+  // TODO - add actual calls to hardware to determine HW version
+  return Hardware_v0_4_VersionString;
+}
+
+void SendReadyMessage() {
+    Serial.print("Holoseat");
+    Serial.print(" HW=");
+    Serial.print(GetHardwareVersion());
+    Serial.print(" FW=");
+    Serial.print(FirmwareVersionString);
+    Serial.print(" HSP=");
+    Serial.println(HspVersionString);
+}
+
 // Parses commands from serial connection
-// see https://opendesignengine.net/projects/holoseat/wiki/Software_Source_Code#HoloSeat-Serial-Protocol
+// see https://opendesignengine.net/projects/holoseat/wiki/HSP
 void ProcessSerialData() {
+  if (Serial && Serial.available()) {
+    DynamicJsonBuffer jsonBuffer(1024);
+    JsonObject& root = jsonBuffer.parse(Serial);
+
+     if (!root.success()) {
+      Serial.println("{\"Error\":\"JSON Parsing Failed\"}");
+      return;
+    }
+
+    // get the uri and verb
+    const char* uri = root["uri"];
+    const char* verb = root["verb"];
+
+    // find the method for uri/verb pair
+    if (strcmp(uri, "/main/ready") == 0) {
+      if (strcmp(verb, "GET") == 0) {
+        MainReadyGet();
+      }
+      else {
+        Serial.println(Error_Illegal_Verb);
+      }
+    }
+    if (strcmp(uri, "/main/logging") == 0) {
+      if (strcmp(verb, "PUT") == 0) {
+        LoggingEnabled = root["args"]["enabled"];
+        LoggingInterval = root["args"]["interval"];
+        Serial.println("{\"result\":\"OK\"}");
+      }
+      else {
+        Serial.println(Error_Illegal_Verb);
+      }
+    }
+  }
+
+  if (LoggingEnabled && (millis() - LastLogTime >= (100 * LoggingInterval))) { // measured in 1/10 sec
+    LastLogTime = millis();
+    SendStateMessage();
+  }
+}
+
+void MainReadyGet() {
+  const size_t bufferSize = JSON_OBJECT_SIZE(4);
+  DynamicJsonBuffer jsonBuffer(bufferSize);
+  JsonObject& root = jsonBuffer.createObject();
+
+  root["device"] = "Holoseat";
+  root["hwVer"] = GetHardwareVersion();
+  root["fwVer"] = FirmwareVersionString;
+  root["hspVer"] = HspVersionString;
+  root.printTo(Serial);
+  Serial.println();
+}
+
+//-----------------------------------------------------
+void ProcessSerialData_old() {
   if (Serial && Serial.available()) {
     // FIXME - replace with C-string functions later for stability 
     String command = Serial.readStringUntil('\n'); 
     int nextStart = 0;
   
     if (command.charAt(0) == '?') {
-      Serial.println("R"); // send ready signal
-      SendStateMessage();
+      SendReadyMessage();
     }
     else if (command.charAt(0) == 'Q') {
       SendStateMessage();
@@ -185,6 +262,7 @@ void ProcessSerialData() {
     SendStateMessage();
   }
 }
+//-----------------------------------------------------
 
 // set up enabled state variables
 int enableReading = LOW;          
