@@ -2,6 +2,8 @@ import serial
 from serial.tools import list_ports
 from collections import deque
 import json
+import threading
+from uuid import uuid4
 
 # set up the serial port for Holoseat comms
 holoseat = serial.Serial()
@@ -11,6 +13,8 @@ holoseat.parity = serial.PARITY_NONE
 holoseat.stopbits = serial.STOPBITS_ONE
 holoseat.timeout = 5 # 5 second timeout for comms with Holoseat
 
+# data queue objects
+lock = threading.RLock()
 data = deque([])
 
 def sendCommand(cmd):
@@ -22,33 +26,48 @@ def readResultLine():
 def connected():
     return holoseat.is_open
 
-def readData():
-    readData = False
-    while (holoseat.in_waiting):
-        data.append(readResultLine())
-        readData = True
+def readData(messageId=None):
+    with lock:
+        readData = False
+        result = None
+        while (holoseat.in_waiting):
+            tempResult = readResultLine()
+            if (tempResult):
+                tempResultJson = json.loads(tempResult)
+                if ('Error' in tempResultJson):
+                    result = tempResult
+                if (messageId and ('messageId' in tempResultJson)
+                    and (tempResultJson['messageId'] == messageId)):
+                    result = tempResult
+                data.append(tempResult)
+                readData = True
 
-    # return the last read element, it is usually what we want
-    if readData:
-        return data[-1]
-
-    # return None if we did not read any new data
-    return None
+        # return None if we did not read a result matching the messageId
+        return result
 
 def popData():
-    if (len(data)):
-        return data.popleft()
-    return None
+    with lock:
+        if (len(data)):
+            return data.popleft()
+        return None
 
 def execCommand(cmd):
-    sendCommand(cmd)
+    with lock:
+        messageId = ""
+        if ('messageId' in cmd):
+            messageId = cmd['messageId']
+        else:
+            messageId = uuid4().hex
+            cmd['messageId'] = messageId
 
-    # wait for the result to come back
-    result = None
-    while not(result):
-        result = readData()
+        sendCommand(json.dumps(cmd))
 
-    return result
+        # wait for the result to come back
+        result = None
+        while not(result):
+            result = readData(messageId)
+
+        return result
 
 def findHoloseatPort():
     comPorts = list_ports.comports()
@@ -59,12 +78,14 @@ def findHoloseatPort():
         # check for Alpha Controller (aka - Adafruit Feather 324u)
         if (vid == '239A' and pid == '800C'):
             return { 'comPort': comPort.device,
-                     'expectedHW_Vers' : ['v0.4'] }
+                     'expectedHwVer' : ['v0.4'],
+                     'expectedDevice': 'Holoseat Alpha' }
 
         # check for v1.0+ (aka Holoseat vid/pid)
         if (vid == '1209' and pid == 'B058'):
             return { 'comPort': comPort.device,
-                     'expectedHW_Vers' : ['v1.0'] }
+                     'expectedHwVer' : ['v1.0'],
+                     'expectedDevice' : 'Holoseat' }
 
     # we iterated over all available com ports and did not find Holoseat
     return None
@@ -77,22 +98,32 @@ def connect():
     holoseat.port = holoseatPort['comPort']
     try:
         holoseat.open()
-        sendCommand(json.dumps({"uri":"/main/ready","verb":"GET"}))
-        readyResults = json.loads(readResultLine())
+
+        # get device name
+        deviceResults = json.loads(execCommand({"uri":"/main/devicename","verb":"GET"}))
 
         # check for errors
-        if ('Error' in readyResults):
+        if ('Error' in deviceResults):
             disconnect()
-            print('Error: %s' % readyResults['Error'])
+            print('Error: %s' % deviceResults['Error'])
             return False
 
         # check result, is this Holoseat?
-        if (readyResults['device'] != 'Holoseat'):
+        if (deviceResults['deviceName'] != holoseatPort['expectedDevice']):
             disconnect()
             return False
 
+        # retrieve version info
+        versionResults = json.loads(execCommand({"uri":"/main/version","verb":"GET"}))
+
+        # check for errors
+        if ('Error' in versionResults):
+            disconnect()
+            print('Error: %s' % versionResults['Error'])
+            return False
+
         # is this the expected HW version?
-        if not(readyResults['hwVer'] in holoseatPort['expectedHW_Vers']):
+        if not(versionResults['hwVer'] in holoseatPort['expectedHwVer']):
             disconnect()
             return False
 
