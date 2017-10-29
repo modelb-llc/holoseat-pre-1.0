@@ -46,7 +46,7 @@ char Hardware_v0_4_VersionString[] = "v0.4";
 char Hardware_v1_0_VersionString[] = "v1.0";
 
 // set up ArduinoJSON
-const char Error_Illegal_Verb[] = "{\"Error\":\"Illegal VERB\"}";
+const char Error_Illegal_Verb[] = "Illegal VERB";
 
 // Parameter values from holoseat_constants.h
 char WalkForwardCharacter = DefaultWalkForwardCharacter;
@@ -102,7 +102,8 @@ volatile unsigned long LastLogTime;   // time since last log message was sent
 
 // formats status string and sends to serial connection if available
 // see https://opendesignengine.net/projects/holoseat/wiki/Software_Source_Code#HoloSeat-Serial-Protocol
-void SendStateMessage() {
+// deprecated
+void SendStateMessage_old() {
   if(!Serial) // if the serial port connection is not available, skip state message
     return;
   
@@ -139,11 +140,23 @@ void SendStateMessage() {
   Serial.println(")");
 }
 
+void SendStateMessage() {
+  const size_t bufferSize = JSON_OBJECT_SIZE(2);
+  DynamicJsonBuffer jsonBuffer(bufferSize);
+  JsonObject& root = jsonBuffer.createObject();
+
+  root["messageId"] = "";  
+  root["StateMessage"] = "Holoseat stating";
+  root.printTo(Serial);
+  Serial.println();
+}
+
 char* GetHardwareVersion() {
   // TODO - add actual calls to hardware to determine HW version
   return Hardware_v0_4_VersionString;
 }
 
+// deprecated
 void SendReadyMessage() {
     Serial.print("Holoseat");
     Serial.print(" HW=");
@@ -152,6 +165,17 @@ void SendReadyMessage() {
     Serial.print(FirmwareVersionString);
     Serial.print(" HSP=");
     Serial.println(HspVersionString);
+}
+
+void SerialReturnError(char* messageId, char* errorMessage) {
+  const size_t bufferSize = JSON_OBJECT_SIZE(2);
+  DynamicJsonBuffer jsonBuffer(bufferSize);
+  JsonObject& root = jsonBuffer.createObject();
+
+  root["messageId"] = messageId;  
+  root["Error"] = errorMessage;
+  root.printTo(Serial);
+  Serial.println();
 }
 
 // Parses commands from serial connection
@@ -166,27 +190,38 @@ void ProcessSerialData() {
       return;
     }
 
-    // get the uri and verb
+    // get the messageId, uri, and verb
+    const char* messageId = root["messageId"];
     const char* uri = root["uri"];
     const char* verb = root["verb"];
 
     // find the method for uri/verb pair
-    if (strcmp(uri, "/main/ready") == 0) {
+    if (strcmp(uri, "/main/devicename") == 0) {
       if (strcmp(verb, "GET") == 0) {
-        MainReadyGet();
+        MainDevicenameGet(messageId);
       }
       else {
-        Serial.println(Error_Illegal_Verb);
+        SerialReturnError(messageId, Error_Illegal_Verb);
+      }
+    }
+    if (strcmp(uri, "/main/version") == 0) {
+      if (strcmp(verb, "GET") == 0) {
+        MainVersionGet(messageId);
+      }
+      else {
+        SerialReturnError(messageId, Error_Illegal_Verb);
       }
     }
     if (strcmp(uri, "/main/logging") == 0) {
       if (strcmp(verb, "PUT") == 0) {
         LoggingEnabled = root["args"]["enabled"];
         LoggingInterval = root["args"]["interval"];
-        Serial.println("{\"result\":\"OK\"}");
+        Serial.print("{\"messageId\":\"");
+        Serial.print(messageId);
+        Serial.println("\",\"result\":\"OK\"}");
       }
       else {
-        Serial.println(Error_Illegal_Verb);
+        SerialReturnError(messageId, Error_Illegal_Verb);
       }
     }
   }
@@ -197,12 +232,26 @@ void ProcessSerialData() {
   }
 }
 
-void MainReadyGet() {
+void MainDevicenameGet(char * messageId) {
+  const size_t bufferSize = JSON_OBJECT_SIZE(2);
+  DynamicJsonBuffer jsonBuffer(bufferSize);
+  JsonObject& root = jsonBuffer.createObject();
+
+  root["messageId"] = messageId;  
+  if (strcmp(GetHardwareVersion(), Hardware_v0_4_VersionString) == 0)
+    root["deviceName"] = "Holoseat Alpha";
+  else
+    root["deviceName"] = "Holoseat";
+  root.printTo(Serial);
+  Serial.println();
+}
+
+void MainVersionGet(char * messageId) {
   const size_t bufferSize = JSON_OBJECT_SIZE(4);
   DynamicJsonBuffer jsonBuffer(bufferSize);
   JsonObject& root = jsonBuffer.createObject();
 
-  root["device"] = "Holoseat";
+  root["messageId"] = messageId; 
   root["hwVer"] = GetHardwareVersion();
   root["fwVer"] = FirmwareVersionString;
   root["hspVer"] = HspVersionString;
@@ -211,6 +260,7 @@ void MainReadyGet() {
 }
 
 //-----------------------------------------------------
+// deprecated
 void ProcessSerialData_old() {
   if (Serial && Serial.available()) {
     // FIXME - replace with C-string functions later for stability 
