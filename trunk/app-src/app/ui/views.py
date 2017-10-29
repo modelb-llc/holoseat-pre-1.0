@@ -1,4 +1,4 @@
-from ui import UI
+from ui import UI, uiConfig
 from flask import render_template, flash, request, url_for, redirect
 from urllib.parse import urlparse, urljoin
 import socket
@@ -40,8 +40,8 @@ def serialMonitor():
 def mobileAddress():
     # per https://stackoverflow.com/a/19638229
     host = socket.gethostbyname(socket.gethostname())
-    port = urlparse(request.host_url).port
-    flash('You may access the Holoseat App from your mobile device at http://%s:%s.' % (host, port), 'info')
+    #port = urlparse(request.host_url).port
+    flash('You may access the Holoseat App from your mobile device at http://%s:%s.' % (host, uiConfig['uiPort']), 'info')
     return redirect(getRedirectBackTarget())
 
 @UI.route('/help/', methods=['GET'])
