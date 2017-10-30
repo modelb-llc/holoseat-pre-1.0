@@ -65,6 +65,46 @@
         </div>
       {% endfor %}
     </div>
+
+    <!-- Top display for enable button and current cadence -->
+    <div class="card">
+      <div class="card-block">
+        <div class="row align-items-center">
+          <div class="col-md-1 col-6 m-1">
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-outline-primary active">
+                <input type="checkbox" checked autocomplete="off">
+                <span class="h4">h</span>
+              </label>
+            </div>
+          </div>
+          <div class="col d-none d-md-block m-1">
+            <select class="custom-select">
+              <option selected>Shroud of the Avatar</option>
+              <option value="1">[default]</option>
+              <option value="2">Mass Effect: Andromeda</option>
+              <option value="3">Shroud of the Avatar</option>
+              <option value="4">Star Wars: The Old Republic</option>
+            </select>
+          </div>
+          <div class="col-md-3 col-5 m-1">
+            <button class="btn btn-outline-primary disabled btn-block">
+              <span class="h4">100 &nbsp;<i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-angle-right" aria-hidden="true"></i></span>
+            </button>
+          </div>
+          <div class="col d-block d-md-none d-lg-none d-xl-none m-1">
+            <select class="custom-select">
+              <option selected>Shroud of the Avatar</option>
+              <option value="1">[default]</option>
+              <option value="2">Mass Effect: Andromeda</option>
+              <option value="3">Shroud of the Avatar</option>
+              <option value="4">Star Wars: The Old Republic</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
     {% block content %}{% endblock %}
   </div>
 
