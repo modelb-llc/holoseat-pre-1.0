@@ -70,21 +70,23 @@
     </div>
 
     <!-- Top display for enable button and current cadence -->
-    <div class="card">
+    <div class="card mb-2">
       <div class="card-block">
-        <div class="row align-items-center">
-          <div class="col-md-1 col-4 m-1">
+        <div class="row align-items-center px-1">
+          <div class="col-md-1 col-6 my-1">
+            <!--
             <div class="btn-group" data-toggle="buttons">
               <label class="btn btn-outline-primary active">
                 <input type="checkbox" checked autocomplete="off">
                 <span class="h4">h</span>
               </label>
             </div>
+            -->
+            <button id="holoseatEnableButton" type="button" class="btn btn-outline-primary active" data-toggle="button" aria-pressed="true" autocomplete="off">
+              <span class="h4">h</span>
+            </button>
           </div>
-          <div class="col-1 d-block d-md-none d-lg-none d-xl-none">
-            &nbsp;
-          </div>
-          <div class="col d-none d-md-block my-1 ml-1 mr-0 pr-0">
+          <div class="col d-none d-md-block my-1 pr-0">
             <select class="selectpicker show-tick" data-width="100%">
               <option value="1" data-content="<span class='h4'>&nbsp;</span><span class='h5'>[default]</span>">[default]</option>
               <option value="2" data-content="<span class='h4'>&nbsp;</span><span class='h5'>Mass Effect: Andromeda</span>">Mass Effect: Andromeda</option>
@@ -92,8 +94,8 @@
               <option value="4" data-content="<span class='h4'>&nbsp;</span><span class='h5'>Star Wars: The Old Republic</span>">Star Wars: The Old Republic</option>
             </select>
           </div>
-          <div class="col-md-3 col-6 my-1 ml-3 mr-1">
-            <button class="btn btn-outline-primary disabled btn-block">
+          <div class="col-md-3 col-6 my-1">
+            <button class="btn btn-outline-primary disabled float-right">
               <span class="h4">
                 <strong><i class="fa fa-angle-left text-white" aria-hidden="true"></i><i class="fa fa-angle-left text-white" aria-hidden="true"></i><i class="fa fa-angle-left text-white" aria-hidden="true"></i><i class="fa fa-angle-left text-white" aria-hidden="true"></i></strong>
                 <span class="px-0">088</span>
@@ -101,8 +103,8 @@
               <span class="h4">
             </button>
           </div>
-          <div class="col d-block d-md-none d-lg-none d-xl-none m-1">
-            <select class="selectpicker show-tick" data-width="100%">
+          <div class="col-12 d-block d-md-none d-lg-none d-xl-none my-1">
+            <select class="selectpicker show-tick px-1" data-width="100%">
               <option value="1" data-content="<span class='h4'>&nbsp;</span><span class='h5'>[default]</span>">[default]</option>
               <option value="2" data-content="<span class='h4'>&nbsp;</span><span class='h5'>Mass Effect: Andromeda</span>">Mass Effect: Andromeda</option>
               <option selected value="3" data-content="<span class='h4'>&nbsp;</span><span class='h5'>Shroud of the Avatar</span>">Shroud of the Avatar</option>
