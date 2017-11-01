@@ -6,12 +6,14 @@
   <div class="card">
     <span class="h4 m-1">Serial Monitor</span>
     <div class="card-block">
-      <div class="input-group my-1 px-1">
-        <input id="serialMonitorInput" type="text" class="form-control" placeholder="Enter a command to send to Holoseat">
-        <span class="input-group-btn">
-            <button class="btn btn-secondary" type="button">Send</button>
-        </span>
-      </div>
+      <form>
+        <div class="input-group my-1 px-1">
+          <input id="serialMonitorInput" type="text" class="form-control" placeholder="Enter a command to send to Holoseat">
+          <span class="input-group-btn">
+              <button class="btn btn-secondary" type="button">Send</button>
+          </span>
+        </div>
+      </form>
 
       <div class="my-1 px-1">
         <textarea readonly class="bg-white form-control form-control-sm" id="serialMonitorOutput" rows="20"></textarea>
@@ -20,16 +22,16 @@
       <div class="row justify-content-between px-1 my-1">
         <div class="col-9">
           <div class="btn-toolbar">
-            <button id="autoScrollEnabledButton" type="button" class="mr-1 btn btn-sm btn-outline-secondary active" data-toggle="button" aria-pressed="true" autocomplete="off">
-              <strong>Autoscroll</strong> On
+            <button id="autoScrollEnabledButton" type="button" onclick="toggleSerialMonitorStates('#autoScrollEnabledButton', '#autoScrollStateText')" class="mr-1 btn btn-sm btn-outline-secondary active" data-toggle="button" aria-pressed="true" autocomplete="off">
+              <strong>Autoscroll</strong> <span id="autoScrollStateText">On</span>
             </button>
-            <button id="watchAllEnabledButton" type="button" class="btn btn-sm btn-outline-secondary" data-toggle="button" aria-pressed="false" autocomplete="off">
-              <strong>Watch All</strong> Off
+            <button id="watchAllEnabledButton" type="button" onclick="toggleSerialMonitorStates('#watchAllEnabledButton', '#watchAllStateText')" class="btn btn-sm btn-outline-secondary" data-toggle="button" aria-pressed="false" autocomplete="off">
+              <strong>Watch All</strong> <span id="watchAllStateText">Off</span>
             </button>
           </div>
         </div>
         <div class="col-3">
-          <button class="btn btn-sm btn-secondary float-right">Clear Output</button>
+          <button id="clearSerialMonitorOutputButton" class="btn btn-sm btn-secondary float-right" onclick="clearSerialMonitorOutput()">Clear Output</button>
         </div>
       </div>
     </div>
