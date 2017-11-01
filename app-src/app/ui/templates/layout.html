@@ -60,15 +60,6 @@
   </nav>
 
   <div class="container">
-    <div>
-      {% for category, message in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{category}} alert-dismissable">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-
     <!-- Top display for enable button and current cadence -->
     <div class="card mb-2">
       <div class="card-block">
@@ -115,6 +106,16 @@
       </div>
     </div>
 
+    <!-- alert boxes -->
+    <div>
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{category}} alert-dismissable">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+
     {% block content %}{% endblock %}
   </div>
 
@@ -123,5 +124,6 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
 	<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/holoseat-app.js') }}"></script>
 </body>
 </html>
