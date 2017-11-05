@@ -6,11 +6,12 @@
   <div class="card">
     <span class="h4 m-1">Serial Monitor</span>
     <div class="card-block">
-      <form>
+      <form id="serialMonitorCommandForm" action="{{ url_for('serialMonitor') }}" method="post">
         <div class="input-group my-1 px-1">
-          <input id="serialMonitorInput" type="text" class="form-control" placeholder="Enter a command to send to Holoseat">
+          {{ commandForm.hidden_tag() }}
+          {{ commandForm.command(class_="form-control", placeholder=commandForm.command.description)}}
           <span class="input-group-btn">
-              <button class="btn btn-secondary" type="button">Send</button>
+              <button id="serialMonitorCommandSendButton" class="btn btn-secondary" type="submit">Send</button>
           </span>
         </div>
       </form>
@@ -45,4 +46,47 @@
   </div>
   <!-- todo: add instructions for restarting app in debug mode -->
   {% endif %}
+{% endblock %}
+
+{% block scriptCode %}
+{% if debug %}
+<script>
+  $(document).ready(function() {
+    $('#serialMonitorCommandForm').submit(function (e) {
+      e.preventDefault(); // block the traditional submission of the form.
+      $('#serialMonitorCommandSendButton').blur();
+      var url = "{{ url_for('serialMonitor') }}"; // send the form data here.
+      $.ajax({
+        type: "POST",
+        url: url,
+        data: $('#serialMonitorCommandForm').serialize(), // serializes the form's elements.
+        beforeSend: function(xhr, settings) {  // Inject our CSRF token into our AJAX request
+          if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", "{{ commandForm.csrf_token._value() }}")
+          }
+        },
+        success: function (data) {
+          //console.log(data)  // display the returned data in the console.
+          if ("formError" in data) {
+            addAlert("Command Error: " +
+                     data['formError']['command'], "danger");
+          }
+          else { // we got a result back from the ajax call
+            var result = JSON.parse(data['result'])
+            if ("ConnectionError" in result) {
+              addAlert("Connection Error: " +
+                       result['ConnectionError'], "warning");
+            }
+            else {  // leave it as a string for display
+              $('#{{ commandForm.command.id }}').val('');
+              $('#{{ commandForm.command.id }}').focus();
+              appendSerialData(data['result'] + '\r\n');
+            }
+          }
+        }
+      });
+    });
+  });
+</script>
+{% endif %}
 {% endblock %}
