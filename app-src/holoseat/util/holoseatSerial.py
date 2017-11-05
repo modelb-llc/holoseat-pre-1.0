@@ -90,7 +90,7 @@ def findHoloseatPort():
     # we iterated over all available com ports and did not find Holoseat
     return None
 
-def connect():
+def connect(expectedHspVer=None):
     holoseatPort = findHoloseatPort()
     if not(holoseatPort):
         return False  # no Holoseat Controllers connected to USB
@@ -128,7 +128,11 @@ def connect():
             return False
 
         # TODO - is this a compatible FW version?
-        # TODO - is this a compatible HSP version?
+
+        # is this the compatible HSP version (must match exactly)?
+        if expectedHspVer and (versionResults['hspVer'] != expectedHspVer):
+            disconnect()
+            return False
 
         # passed all tests, we can talk to this Holoseat
         return True

@@ -5,18 +5,21 @@ from tornado import web, escape, ioloop, httpclient, gen
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-apiConfig = { 'apiPort' : 8080,
+apiConfig = { 'apiVersion' : 'v0.4.0',
+              'apiPort' : 8080,
               'debug' : False }
 
 apiThreadPool = ThreadPoolExecutor()
 
 # package imports now that the package variables are declared
-from api import mainHandlers, debugHandlers
+from holoseat.api.apiHandler import apiHandler
+from holoseat.api import mainHandlers, debugHandlers
 
 def apiThreadFunc(debug=False, port=8080):
     application = web.Application([
         (r"/api/main/devicename", mainHandlers.DevicenameHandler),
         (r"/api/main/version", mainHandlers.VersionHandler),
+        (r"/api/main/apiVersion", mainHandlers.ApiVersionHandler),
         (r"/api/debug", debugHandlers.DebugHandler),
         (r"/api/debug/serial", debugHandlers.DebugSerialHandler)
     ], debug=debug)

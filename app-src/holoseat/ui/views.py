@@ -1,4 +1,4 @@
-from ui import UI, uiConfig
+from holoseat.ui import UI, uiConfig
 from flask import render_template, flash, request, url_for, redirect
 from urllib.parse import urlparse, urljoin
 import socket

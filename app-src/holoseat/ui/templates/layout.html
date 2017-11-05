@@ -61,6 +61,7 @@
 
   <div class="container">
     <!-- Top display for enable button and current cadence -->
+    {% if not request.endpoint.startswith('help') %}
     <div class="card mb-2">
       <div class="card-block">
         <div class="row align-items-center px-1">
@@ -105,6 +106,7 @@
         </div>
       </div>
     </div>
+    {% endif %}
 
     <!-- alert boxes -->
     <div>

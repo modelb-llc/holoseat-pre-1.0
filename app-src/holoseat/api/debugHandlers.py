@@ -1,6 +1,5 @@
 from tornado import web, escape
-from api.apiHandler import apiHandler
-from api import status, apiConfig
+from holoseat.api import status, apiConfig, apiHandler
 
 class DebugHandler(web.RequestHandler):
     def initialize(self):
