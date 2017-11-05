@@ -92,7 +92,7 @@
                 <strong><i class="fa fa-angle-left text-white" aria-hidden="true"></i><i class="fa fa-angle-left text-white" aria-hidden="true"></i><i class="fa fa-angle-left text-white" aria-hidden="true"></i><i class="fa fa-angle-left text-white" aria-hidden="true"></i></strong>
                 <span class="px-0">088</span>
                 <strong><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-angle-right text-white" aria-hidden="true"></i></strong>
-              <span class="h4">
+              </span>
             </button>
           </div>
           <div class="col-12 d-block d-md-none d-lg-none d-xl-none my-1">
@@ -109,7 +109,7 @@
     {% endif %}
 
     <!-- alert boxes -->
-    <div>
+    <div id="alertArea">
       {% for category, message in get_flashed_messages(with_categories=true) %}
         <div class="alert alert-{{category}} alert-dismissable">
           <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -122,10 +122,12 @@
   </div>
 
 	<!-- jQuery first, then Bootstrap JS. -->
-	<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.2.1.slim.min.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
 	<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/holoseat-app.js') }}"></script>
+
+  {% block scriptCode %}{% endblock %}
 </body>
 </html>

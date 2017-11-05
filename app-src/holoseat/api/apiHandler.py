@@ -44,7 +44,7 @@ class apiHandler(web.RequestHandler):
                 holoseatSerial.disconnect()
                 self.set_status(status.HTTP_503_SERVICE_UNAVAILABLE)
                 response = {
-                    'Error': 'Lost connection to Holoseat',
+                    'ConnectionError': 'Lost connection to Holoseat',
                     'exceptionDetails': e.args[0]
                 }
                 self.write(response)
@@ -53,7 +53,7 @@ class apiHandler(web.RequestHandler):
 
         else:
             response = {
-                'Error': 'Cannot find Holoseat'
+                'ConnectionError': 'Cannot find Holoseat'
             }
             self.set_status(status.HTTP_503_SERVICE_UNAVAILABLE)
             self.write(response)

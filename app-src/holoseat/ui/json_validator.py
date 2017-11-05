@@ -16,4 +16,4 @@ class JsonString(object):
         except:
             raise ValidationError(self.message)
 
-json_string = JsonString()
+json_string = JsonString

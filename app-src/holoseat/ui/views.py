@@ -1,7 +1,9 @@
-from holoseat.ui import UI, uiConfig
-from flask import render_template, flash, request, url_for, redirect
+from holoseat.ui import UI, uiConfig, forms
+from flask import render_template, flash, request, url_for, redirect, jsonify
 from urllib.parse import urlparse, urljoin
 import socket
+import json
+import requests
 
 # helper functions
 def isSafeUrl(target):
@@ -32,9 +34,20 @@ def hwDefaults():
 def profiles():
     return render_template("profiles.html")
 
-@UI.route('/serial-monitor', methods=['GET'])
+@UI.route('/serial-monitor', methods=['GET', 'POST'])
 def serialMonitor():
-    return render_template("serial-monitor.html")
+    commandForm = forms.SerialMonitorCommandForm()
+    if request.method == 'POST':
+        if commandForm.validate_on_submit():
+            result = requests.put('http://localhost:%s/api/debug/serial'%uiConfig['apiPort'],
+                                  data=commandForm.command.data)
+            return jsonify(result=result.content.decode("utf-8"))
+        else:
+            return jsonify(formError=commandForm.errors)
+    else:
+        commandForm = forms.SerialMonitorCommandForm()
+
+    return render_template("serial-monitor.html", commandForm=commandForm)
 
 @UI.route('/mobile-address', methods=['GET'])
 def mobileAddress():

@@ -27,3 +27,10 @@ function clearSerialMonitorOutput() {
   $('#serialMonitorOutput').scrollTop(0);
   $('#clearSerialMonitorOutputButton').blur();
 }
+
+function addAlert(message, category) {
+  $( "<div></div>" )
+    .addClass("alert alert-dismissable alert-" + category)
+    .append("<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>" + message)
+    .appendTo("#alertArea");
+}
