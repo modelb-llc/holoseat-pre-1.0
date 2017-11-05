@@ -18,7 +18,7 @@ def inject_debug():
     return dict(debug=UI.debug)
 
 # import required modules from the ui package so we can just run it
-from ui import views
+from holoseat.ui import views
 
 # turned off reloader per https://stackoverflow.com/a/24618018
 # set host to 0.0.0.0 per https://stackoverflow.com/a/7027113

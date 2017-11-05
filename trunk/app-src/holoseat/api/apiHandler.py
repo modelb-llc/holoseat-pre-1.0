@@ -1,8 +1,8 @@
-from api import status, apiThreadPool
+from holoseat.api import status, apiThreadPool, apiConfig
 from concurrent.futures import ThreadPoolExecutor
 from tornado.concurrent import run_on_executor
 from tornado import web, gen
-from util import holoseatSerial
+from holoseat.util import holoseatSerial
 import json
 import serial
 
@@ -12,7 +12,7 @@ class apiHandler(web.RequestHandler):
 
     @run_on_executor(executor="_threadPool")
     def connectedOrConnect(self):
-        return holoseatSerial.connected() or holoseatSerial.connect()
+        return holoseatSerial.connected() or holoseatSerial.connect(apiConfig['apiVersion'])
 
     @run_on_executor(executor="_threadPool")
     def execCommand(self, command):

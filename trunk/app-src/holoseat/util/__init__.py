@@ -1,7 +1,7 @@
 import socket
 from contextlib import closing
 
-from util import holoseatSerial
+from holoseat.util import holoseatSerial
 
 # from https://stackoverflow.com/a/45690594
 def findFreePort():
