@@ -122,11 +122,11 @@
   </div>
 
 	<!-- jQuery first, then Bootstrap JS. -->
-	<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='js/holoseat-app.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') + '?v=' + jsVersionString }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/popper.min.js') + '?v=' + jsVersionString }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') + '?v=' + jsVersionString }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-select.min.js') + '?v=' + jsVersionString }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/holoseat-app.js') + '?v=' + jsVersionString }}"></script>
 
   {% block scriptCode %}{% endblock %}
 </body>

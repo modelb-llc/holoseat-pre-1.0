@@ -22,7 +22,7 @@ def apiThreadFunc(debug=False, port=8080):
         (r"/api/main/apiVersion", mainHandlers.ApiVersionHandler),
         (r"/api/debug", debugHandlers.DebugHandler),
         (r"/api/debug/serial", debugHandlers.DebugSerialHandler)
-    ], debug=debug)
+    ], debug=debug, autoreload=False)
     print("Listening at port {0}".format(port))
     application.listen(port)
     ioloop.IOLoop.instance().start()

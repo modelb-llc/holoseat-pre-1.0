@@ -15,11 +15,12 @@ debug_toolbar = DebugToolbarExtension()
 
 uiConfig = { 'uiPort' : 8000,
              'apiPort' : 8080,
-             'debug' : False}
+             'debug' : False,
+             'jsVersionString' : uuid4().hex}
 
 @UI.context_processor
-def inject_debug():
-    return dict(debug=UI.debug)
+def inject_constants():
+    return dict(debug=UI.debug, jsVersionString=uiConfig['jsVersionString'])
 
 # import required modules from the ui package so we can just run it
 from holoseat.ui import views
