@@ -4,6 +4,7 @@ from tornado import web, escape, ioloop, httpclient, gen
 # other imports
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from holoseat.util import holoseatSerial
 
 apiConfig = { 'apiVersion' : 'v0.4.0',
               'uiPort' : 8000,
@@ -11,6 +12,9 @@ apiConfig = { 'apiVersion' : 'v0.4.0',
               'debug' : False }
 
 apiThreadPool = ThreadPoolExecutor()
+
+def connectedOrConnect():
+    return holoseatSerial.connected() or holoseatSerial.connect(apiConfig['apiVersion'])
 
 # package imports now that the package variables are declared
 from holoseat.api.apiHandler import apiHandler
