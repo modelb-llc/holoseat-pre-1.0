@@ -34,3 +34,14 @@ function addAlert(message, category) {
     .append("<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>" + message)
     .appendTo("#alertArea");
 }
+
+function setHoloseatEnableButton(enabled) {
+  if (enabled) {
+    $('#holoseatEnableButton').attr("aria-pressed", true);
+    $('#holoseatEnableButton').addClass('active');
+  }
+  else {
+    $('#holoseatEnableButton').attr("aria-pressed", false);
+    $('#holoseatEnableButton').removeClass('active');
+  }
+}

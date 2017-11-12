@@ -1,4 +1,4 @@
-from holoseat.api import status, apiThreadPool, apiConfig
+from holoseat.api import status, apiThreadPool, apiConfig, connectedOrConnect
 from concurrent.futures import ThreadPoolExecutor
 from tornado.concurrent import run_on_executor
 from tornado import web, gen
@@ -12,7 +12,7 @@ class apiHandler(web.RequestHandler):
 
     @run_on_executor(executor="_threadPool")
     def connectedOrConnect(self):
-        return holoseatSerial.connected() or holoseatSerial.connect(apiConfig['apiVersion'])
+        return connectedOrConnect()
 
     @run_on_executor(executor="_threadPool")
     def execCommand(self, command):
