@@ -52,6 +52,15 @@
 {% if debug %}
 <script>
   $(document).ready(function() {
+    // set up serial monitor event listener
+    holoseatEventListeners.push({eventType : "*",
+                                 handle : function(message) {
+                                   if (isActive('#watchAllEnabledButton')) {
+                                     appendSerialData(JSON.stringify(message) + '\r\n');
+                                   }
+                                 }});
+
+    // set up serial monitor ajax code
     $('#serialMonitorCommandForm').submit(function (e) {
       e.preventDefault(); // block the traditional submission of the form.
       $('#serialMonitorCommandSendButton').blur();
@@ -80,7 +89,8 @@
             else {  // leave it as a string for display
               $('#{{ commandForm.command.id }}').val('');
               $('#{{ commandForm.command.id }}').focus();
-              appendSerialData(data['result'] + '\r\n');
+              if (!isActive('#watchAllEnabledButton'))
+                appendSerialData(data['result'] + '\r\n');
             }
           }
         }

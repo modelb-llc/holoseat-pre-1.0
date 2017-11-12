@@ -1,7 +1,7 @@
 from holoseat.ui import UI, uiConfig, forms
+from holoseat.util import getHost
 from flask import render_template, flash, request, url_for, redirect, jsonify
 from urllib.parse import urlparse, urljoin
-import socket
 import json
 import requests
 
@@ -51,10 +51,7 @@ def serialMonitor():
 
 @UI.route('/mobile-address', methods=['GET'])
 def mobileAddress():
-    # per https://stackoverflow.com/a/19638229
-    host = socket.gethostbyname(socket.gethostname())
-    #port = urlparse(request.host_url).port
-    flash('You may access the Holoseat App from your mobile device at http://%s:%s.' % (host, uiConfig['uiPort']), 'info')
+    flash('You may access the Holoseat App from your mobile device at http://%s:%s.' % (getHost(), uiConfig['uiPort']), 'info')
     return redirect(getRedirectBackTarget())
 
 @UI.route('/help/', methods=['GET'])

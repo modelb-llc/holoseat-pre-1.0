@@ -20,7 +20,9 @@ uiConfig = { 'uiPort' : 8000,
 
 @UI.context_processor
 def inject_constants():
-    return dict(debug=UI.debug, jsVersionString=uiConfig['jsVersionString'])
+    return dict(debug=UI.debug,
+                jsVersionString=uiConfig['jsVersionString'],
+                apiPort=uiConfig['apiPort'])
 
 # import required modules from the ui package so we can just run it
 from holoseat.ui import views
