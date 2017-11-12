@@ -128,6 +128,54 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-select.min.js') + '?v=' + jsVersionString }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/holoseat-app.js') + '?v=' + jsVersionString }}"></script>
 
+  <!-- websocket code -->
+  <script>
+    holoseatEventListeners = [];
+
+    var hostname = window.location.hostname;
+    var ws = new WebSocket('ws://'+hostname+':' + {{apiPort}} + '/ws');
+
+    ws.onopen = function() {
+      {% if debug %}
+      console.log('Connected to WebSocket');
+      {% endif %}
+    };
+
+     ws.onmessage = function(ev) {
+       {% if debug %}
+       console.log(ev.data);
+       {% endif %}
+       var message = JSON.parse(ev.data);
+       if ("messageId" in message) {
+         {% if debug %}
+         console.log(holoseatEventListeners);
+         {% endif %}
+         holoseatEventListeners.forEach( function (listener) {
+           {% if debug %}
+           console.log(listener);
+           {% endif %}
+           if ((listener.eventType === '*') || (listener.eventType === message.type)) {
+            listener.handle(message);
+           }
+         });
+       }
+       else {
+         console.log("Could not find messageId in: " + ev.data);
+       }
+     };
+
+     ws.onclose = function(ev) {
+       {% if debug %}
+       console.log('Disconnected from WebSocket: ' + JSON.stringify(ev));
+       {% endif %}
+     };
+
+     ws.onerror = function(ev) {
+       {% if debug %}
+       console.log('WebSocket Error');
+       {% endif %}
+     };
+  </script>
   {% block scriptCode %}{% endblock %}
 </body>
 </html>

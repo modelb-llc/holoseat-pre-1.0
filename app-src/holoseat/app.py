@@ -45,7 +45,7 @@ trayIcon = pystray.Icon(name="Holoseat", icon=PIL.Image.open(iconFileName),
 trayIcon.warnings = True
 
 def trayRunner(icon):
-    api.start(debug=currentConfig.DEBUG, apiPort=currentConfig.API_PORT)
+    api.start(debug=currentConfig.DEBUG, apiPort=currentConfig.API_PORT, uiPort=currentConfig.UI_PORT)
     ui.start(debug=currentConfig.DEBUG, uiPort=currentConfig.UI_PORT, apiPort=currentConfig.API_PORT)
     icon.visible = True
 

@@ -28,9 +28,8 @@ def connected():
 
 def readData(messageId=None):
     with lock:
-        readData = False
         result = None
-        while (holoseat.in_waiting):
+        while (connected() and holoseat.in_waiting):
             tempResult = readResultLine()
             if (tempResult):
                 tempResultJson = json.loads(tempResult)
@@ -40,7 +39,6 @@ def readData(messageId=None):
                     and (tempResultJson['messageId'] == messageId)):
                     result = tempResult
                 data.append(tempResult)
-                readData = True
 
         # return None if we did not read a result matching the messageId
         return result
