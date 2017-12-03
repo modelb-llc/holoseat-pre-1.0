@@ -1,7 +1,7 @@
 from holoseat.api import status, apiThreadPool, apiConfig, connectedOrConnect
 from concurrent.futures import ThreadPoolExecutor
 from tornado.concurrent import run_on_executor
-from tornado import web, gen
+from tornado import web, gen, escape
 from holoseat.util import holoseatSerial
 import json
 import serial
@@ -59,3 +59,12 @@ class apiHandler(web.RequestHandler):
             self.write(response)
             self.finish()
             return
+
+    def get(self):
+        command = {"uri":self.request.uri.replace("/api",""),"verb":"GET"}
+        self.processCommand(command)
+
+    def put(self):
+        args = escape.json_decode(self.request.body)
+        command = {"uri":self.request.uri.replace("/api",""),"verb":"PUT", "args":args}
+        self.processCommand(command)
