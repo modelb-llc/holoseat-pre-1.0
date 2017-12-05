@@ -1,7 +1,7 @@
 import socket
 from contextlib import closing
 
-from holoseat.util import holoseatSerial, restserial
+from holoseat.util import holoseatSerial, jsonserial
 
 holoseatDevice = holoseatSerial.holoseatSerialDevice()
 
