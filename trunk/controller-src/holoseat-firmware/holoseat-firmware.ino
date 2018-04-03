@@ -119,7 +119,7 @@ char* GetHardwareVersion() {
   return Hardware_v0_4_VersionString;
 }
 
-void SerialReturnError(char* messageId, char* errorMessage) {
+void SerialReturnError(const char* messageId, const char* errorMessage) {
   const size_t bufferSize = JSON_OBJECT_SIZE(2);
   DynamicJsonBuffer jsonBuffer(bufferSize);
   JsonObject& root = jsonBuffer.createObject();
