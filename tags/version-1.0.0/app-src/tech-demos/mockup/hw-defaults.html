@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hardware Defaults</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/css/font-awesome.min.css">
+    </head>
+
+    <body>
+      <div class="container">
+      <nav class="navbar navbar-expand-md navbar-dark rounded" style="background-color: #e17826;">
+        <a class="navbar-brand" href="#">
+           <img src="/static/assets/logo2.jpg" height="35" class="d-inline-block align-top" alt="">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="nav navbar-nav mr-auto">
+            <li class="nav-item"><a class="nav-link" href="/">Controls</a></li>
+            <li class="nav-item"><a class="nav-link" href="/profiles.html">Profiles</a></li>
+            <li class="nav-item dropdown active">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Settings
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <a class="dropdown-item" href="#">Connect</a>
+                <a class="dropdown-item" href="/hw-defaults.html">Hardware Defaults</a>
+                <a class="dropdown-item" href="/serial-monitor.html">Serial Monitor</a>
+              </div>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Help
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <a class="dropdown-item" href="/help" target="_new">Help</a>
+                <a class="dropdown-item" href="/about.html">About</a>
+              </div>
+            </li>
+          </ul>
+          <span class="navbar-text">
+            <em>Exerfy your games.</em>
+          </span>
+        </div>
+        </nav>
+        <br>
+
+        <!-- content goes here -->
+        <h2>Manage Holoseat Defaults</h2>
+        <p>The four primary settings for Holoseat (shown below) have default values
+        stored in the controller which persist when Holoseat is without power
+        (e.g. it is unplugged or the computer is turned off).  The values are
+        not stored until you click the <strong>Save</strong> button.  You may
+        reset the values with the current defaults by clicking the
+        <strong>Cancel</strong> button.
+
+        <div class="rounded" style="background: #d8d8d8;">
+          <div class="container">
+            <hr class="my-1">
+            <h4>Holoseat Defaults</h4>
+            <form>
+            <div class="row mt-2">
+              <div class="col-1">&nbsp;</div>
+              <div class="col-2">
+                <span class="align-middle"><strong>Enabled?</strong></span>
+              </div>
+              <div class="col">
+                <div class="btn-group" data-toggle="buttons">
+                  <label class="btn btn-outline-success btn active">
+                    <input type="checkbox" checked autocomplete="off">
+                    <i class="fa fa-power-off" aria-hidden="true"></i>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-2">
+              <div class="col-1">&nbsp;</div>
+              <div class="col-2">
+                <span class="align-middle"><strong>Step Size</strong></span>
+              </div>
+              <div class="col">
+                <div class="btn-group" data-toggle="buttons">
+                  <label class="btn btn-outline-success btn">
+                    <input type="radio" name="options" id="option1" autocomplete="off">
+                    <i class="fa fa-caret-right" aria-hidden="true"></i>
+                  </label>
+                  <label class="btn btn-outline-success btn active">
+                    <input type="radio" name="options" id="option2" autocomplete="off" checked>
+                    <i class="fa fa-caret-right" aria-hidden="true"></i><i class="fa fa-caret-right" aria-hidden="true"></i>
+                  </label>
+                  <label class="btn btn-outline-success btn">
+                    <input type="radio" name="options" id="option3" autocomplete="off">
+                    <i class="fa fa-caret-right" aria-hidden="true"></i><i class="fa fa-caret-right" aria-hidden="true"></i><i class="fa fa-caret-right" aria-hidden="true"></i>
+                  </label>
+                  <label class="btn btn-outline-success btn">
+                    <input type="radio" name="options" id="option4" autocomplete="off">
+                    <i class="fa fa-caret-right" aria-hidden="true"></i><i class="fa fa-caret-right" aria-hidden="true"></i><i class="fa fa-caret-right" aria-hidden="true"></i><i class="fa fa-caret-right" aria-hidden="true"></i>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-2">
+              <div class="col-1">&nbsp;</div>
+              <div class="col-2">
+                <span class="align-middle"><strong>Forward</strong></span>
+              </div>
+              <div class="col">
+                  <input type="text" class="form-control col-1" maxlength="1" placeholder="w" value="w">
+              </div>
+            </div>
+
+            <div class="row mt-2">
+              <div class="col-1">&nbsp;</div>
+              <div class="col-2">
+                <span class="align-middle"><strong>Reverse</strong></span>
+              </div>
+              <div class="col">
+                  <input type="text" class="form-control col-1" maxlength="1" placeholder="s" value="s">
+              </div>
+            </div>
+
+            <!-- submit/cancel -->
+            <div class="row mt-2">
+              <div class="col-1">&nbsp;</div>
+              <div class="col-2">&nbsp;</div>
+              <div class="col">
+                 <button class="btn btn-info">Cancel</button>
+                 <button class="btn btn-info">Save</button>
+              </div>
+            </div>
+
+            <p>&nbsp;</p>
+          </div>
+        </div>
+        </form>
+        <!-- end content -->
+
+        </div>
+
+        <script src="/static/js/jquery-3.2.1.slim.min.js"></script>
+        <script src="/static/js/popper.min.js"></script>
+        <script src="/static/js/bootstrap.min.js"></script>
+
+
+    </body>
+</html>
